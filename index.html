@@ -216,6 +216,31 @@ button:disabled {
   cursor: not-allowed;
 }
 
+/* Tabs for Register / Login */
+.auth-tabs {
+  display: flex;
+  border-bottom: 2px solid var(--line);
+  margin-bottom: 14px;
+  gap: 6px;
+}
+.auth-tab {
+  padding: 8px 16px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  color: var(--mute);
+  border-radius: 0;
+  min-height: auto;
+  transition: color 0.15s, border-color 0.15s;
+}
+.auth-tab.active {
+  color: var(--acc);
+  border-bottom-color: var(--acc);
+}
+
 /* Grid Layout */
 .grid {
   display: grid;
@@ -570,7 +595,7 @@ tr:last-child td { border-bottom: 0; }
     </div>
   </div>
 
-  <!-- Employee Login & Session Bar -->
+  <!-- Employee Login & Registration Section -->
   <div id="voter-bar"></div>
 
   <!-- Admin Panel Mount Point -->
@@ -585,9 +610,9 @@ tr:last-child td { border-bottom: 0; }
   </div>
 
   <div class="footer">
-    <p class="note">🔒 Verified Participation: Staff login to verify who has voted. Admin can audit votes and see live progress.</p>
+    <p class="note">🔒 Verified Participation: Register or log in with your name to vote. Each employee can vote once per month.</p>
     <div>
-      <a href="#" id="alink" style="color:var(--mute);font-weight:600;font-size:0.85rem">⚙️ Admin Login (PIN: 1234)</a>
+      <a href="#" id="alink" style="color:var(--mute);font-weight:600;font-size:0.85rem">⚙️ Admin Portal</a>
     </div>
   </div>
 </main>
@@ -596,7 +621,7 @@ tr:last-child td { border-bottom: 0; }
 
 <script>
 /* -------------------------------------------------------------
-   Employee of the Month — Verified Voting & Management Engine
+   Employee of the Month — Self-Registration, Login & Management
 ------------------------------------------------------------- */
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -657,25 +682,14 @@ const DEFAULT_DATA = {
   feedback: []
 };
 
-// Robust Storage Engine with Quota Protection
+// Storage Engine
 const DB = {
   get() {
     try {
       const raw = localStorage.getItem('eom_db_v2');
       if (!raw) {
-        // Check v1 migration if present
-        const oldRaw = localStorage.getItem('eom_db_v1');
-        let initial = DEFAULT_DATA;
-        if (oldRaw) {
-          try {
-            const old = JSON.parse(oldRaw);
-            if (old.employees && old.employees.length) {
-              initial.employees = old.employees;
-            }
-          } catch(e) {}
-        }
-        localStorage.setItem('eom_db_v2', JSON.stringify(initial));
-        return JSON.parse(JSON.stringify(initial));
+        localStorage.setItem('eom_db_v2', JSON.stringify(DEFAULT_DATA));
+        return JSON.parse(JSON.stringify(DEFAULT_DATA));
       }
       return JSON.parse(raw);
     } catch(e) {
@@ -689,16 +703,15 @@ const DB = {
     } catch(e) {
       console.warn('Storage quota warning, optimizing images...', e);
       try {
-        // Compress base64 if quota is hit
         data.employees.forEach(emp => {
           if (emp.photo && emp.photo.length > 25000) {
-            emp.photo = ''; // Reset large photo to prevent storage failure
+            emp.photo = '';
           }
         });
         localStorage.setItem('eom_db_v2', JSON.stringify(data));
         return true;
       } catch(e2) {
-        toast('Warning: Browser storage is full. Please clear some browser cache.');
+        toast('Warning: Browser storage is full.');
         return false;
       }
     }
@@ -709,7 +722,7 @@ const DB = {
   }
 };
 
-// Support for sharing roster in URL hash so WhatsApp links share the latest employees
+// Roster syncing via URL hash
 function syncRosterFromUrl() {
   if (window.location.hash.startsWith('#r=')) {
     try {
@@ -735,7 +748,6 @@ function syncRosterFromUrl() {
   }
 }
 
-// Generate shareable URL with current employee names & roles
 function getShareUrl() {
   const db = DB.get();
   const minimalRoster = db.employees.map(e => ({
@@ -752,7 +764,7 @@ function getShareUrl() {
   }
 }
 
-// Image compression utility: squares & crops to 150x150 JPEG (~6KB)
+// Compress avatar photos to 150x150 Retina JPEG (~6KB)
 function compressImage(file) {
   return new Promise((resolve, reject) => {
     if (!file) return resolve('');
@@ -780,7 +792,7 @@ function compressImage(file) {
   });
 }
 
-// Serverless-style RPC calls over local database
+// Backend RPC functions
 const RPC = {
   pub() {
     const db = DB.get();
@@ -796,6 +808,32 @@ const RPC = {
       emps: db.employees
     };
   },
+
+  empRegister(p_name, p_role, p_photo, p_pin) {
+    const name = String(p_name || '').trim();
+    if (!name) throw new Error('Please enter your full name');
+    const pin = String(p_pin || '').trim();
+    if (!pin) throw new Error('Please choose a PIN (e.g. 4 digits) for your account');
+
+    const db = DB.get();
+    const existing = db.employees.find(e => e.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+      throw new Error(`An employee named "${name}" is already registered. Please sign in or use a distinct name.`);
+    }
+
+    const newEmp = {
+      id: 'e' + Date.now(),
+      name,
+      role: String(p_role || '').trim() || 'Staff Member',
+      photo: String(p_photo || '').trim(),
+      pin: pin,
+      created_at: Date.now()
+    };
+
+    db.employees.push(newEmp);
+    DB.save(db);
+    return newEmp;
+  },
   
   empLogin(p_eid, p_pin) {
     const db = DB.get();
@@ -804,7 +842,7 @@ const RPC = {
     const enteredPin = String(p_pin || '').trim();
     const targetPin = String(emp.pin || '1111').trim();
     if (enteredPin !== targetPin && enteredPin !== String(db.admin_pin)) {
-      throw new Error('Wrong employee PIN. Default is 1111');
+      throw new Error('Wrong PIN for this employee account');
     }
     const curMonth = getMonthStr();
     const vote = db.ballots.find(b => b.month === curMonth && b.voter_id === emp.id);
@@ -820,7 +858,7 @@ const RPC = {
     const db = DB.get();
     const curMonth = getMonthStr();
     const voter = db.employees.find(e => e.id === p_voter_id);
-    if (!voter) throw new Error('Please log in as an employee first');
+    if (!voter) throw new Error('Please log in or register first');
     if (p_voter_id === p_cid) throw new Error('You cannot vote for yourself!');
     
     const existing = db.ballots.find(b => b.month === curMonth && b.voter_id === p_voter_id);
@@ -866,14 +904,13 @@ const RPC = {
   adm(p_pin) {
     const db = DB.get();
     if (String(p_pin || '').trim() !== String(db.admin_pin)) {
-      throw new Error('Wrong admin PIN. Default is 1234');
+      throw new Error('Wrong admin PIN');
     }
     const curMonth = getMonthStr();
     const monthBallots = db.ballots.filter(b => b.month === curMonth);
     const counts = {};
     monthBallots.forEach(b => { counts[b.cid] = (counts[b.cid] || 0) + 1; });
     
-    // Who has voted vs Who hasn't
     const votedIds = new Set(monthBallots.map(b => b.voter_id));
     const votedList = monthBallots.map(b => ({
       voter_id: b.voter_id,
@@ -891,6 +928,7 @@ const RPC = {
     const fbList = db.feedback.filter(f => f.month === curMonth);
 
     return {
+      adminPin: db.admin_pin,
       counts,
       total: monthBallots.length,
       employees: db.employees,
@@ -898,6 +936,16 @@ const RPC = {
       pendingList,
       fb: fbList
     };
+  },
+
+  changeAdminPin(p_old_pin, p_new_pin) {
+    const db = DB.get();
+    if (String(p_old_pin || '').trim() !== String(db.admin_pin)) throw new Error('Wrong current admin PIN');
+    const n = String(p_new_pin || '').trim();
+    if (!n || n.length < 4) throw new Error('New PIN must be at least 4 characters');
+    db.admin_pin = n;
+    DB.save(db);
+    return n;
   },
 
   addEmp(p_pin, p_name, p_role, p_photo) {
@@ -918,7 +966,7 @@ const RPC = {
     return newEmp;
   },
 
-  editEmp(p_pin, p_id, p_name, p_role, p_photo) {
+  editEmp(p_pin, p_id, p_name, p_role, p_photo, p_emp_pin) {
     const db = DB.get();
     if (String(p_pin || '').trim() !== String(db.admin_pin)) throw new Error('Wrong admin PIN');
     const emp = db.employees.find(e => e.id === p_id);
@@ -931,8 +979,10 @@ const RPC = {
     if (p_photo !== undefined) {
       emp.photo = String(p_photo || '').trim();
     }
+    if (p_emp_pin) {
+      emp.pin = String(p_emp_pin).trim();
+    }
     
-    // Update ballot voter & candidate names for display accuracy
     db.ballots.forEach(b => {
       if (b.voter_id === p_id) b.voter_name = name;
       if (b.cid === p_id) b.cname = name;
@@ -970,31 +1020,30 @@ const RPC = {
 
 const run = async (fn, ...args) => RPC[fn](...args);
 
-// Application State
+// State Variables
 let D = { emps: [], counts: {} },
     curVoter = null,
     voterState = { hasVoted: false, votedFor: null, votedTime: null },
     pin = null,
     A = null,
-    armed = null;
+    armed = null,
+    activeAuthTab = 'register'; // 'register' or 'login'
 
-// Initial sync
+// Initial sync from URL hash
 syncRosterFromUrl();
 
-// Set date string
 $('mo').textContent = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }) + ' · Company Voting & Verification';
 
-// WhatsApp share button
 function updateWhatsAppButton() {
   const url = getShareUrl();
-  const text = encodeURIComponent(`🏆 Cast your vote for Employee of the Month!\nVerify and cast your vote here: ${url}`);
+  const text = encodeURIComponent(`🏆 Vote for Employee of the Month!\nRegister or sign in to cast your vote here: ${url}`);
   $('wa-share').href = `https://api.whatsapp.com/send?text=${text}`;
   $('wa-share').onclick = (e) => {
     if (navigator.share) {
       e.preventDefault();
       navigator.share({
         title: 'Employee of the Month Voting',
-        text: 'Vote for your colleague of the month! Verified & mobile-friendly.',
+        text: 'Vote for your colleague of the month! Register & vote now.',
         url: url
       }).catch(() => {
         window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
@@ -1009,7 +1058,7 @@ const av = e => e.photo
   ? `<img class="av" src="${esc(e.photo)}" alt="${esc(e.name)}" title="Tap to zoom">`
   : `<div class="av">${esc(ini(e.name))}</div>`;
 
-// Restore session from localStorage if saved
+// Restore session from localStorage if present
 try {
   const savedVoterId = localStorage.getItem('eom_voter_id');
   if (savedVoterId) {
@@ -1057,10 +1106,7 @@ function render() {
 
   $('st').textContent = total + ' vote' + (total === 1 ? '' : 's') + ' cast' + (D.rev ? ' · Results announced 🎉' : ' · Voting active');
 
-  // Render Employee Login / Session Bar
   renderVoterBar();
-
-  // Admin panel rendering
   renderAdminPanel(adminOn);
 
   // Winner banner
@@ -1078,7 +1124,7 @@ function render() {
   // Employee voting cards
   let h = '';
   if (!D.emps.length) {
-    h = `<div class="panel" style="text-align:center;padding:32px"><p class="note">No employees added yet. Tap Admin Login below to add team members.</p></div>`;
+    h = `<div class="panel" style="text-align:center;padding:32px"><p class="note">No employees registered yet. Use the registration form above to be the first to join!</p></div>`;
   } else {
     const list = D.rev ? [...D.emps].sort((a, b) => (c[b.id] || 0) - (c[a.id] || 0)) : D.emps;
     h = '<div class="grid">' + list.map(e => {
@@ -1133,12 +1179,12 @@ function render() {
 
   $('app').innerHTML = h;
 
-  // Event handlers
+  // Listeners
   document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => doVote(b.dataset.v));
   document.querySelectorAll('[data-need-login]').forEach(b => b.onclick = () => {
-    toast('Please select your name above to login and vote');
-    const sel = $('voter-select');
-    if (sel) { sel.focus(); sel.scrollIntoView({ behavior: 'smooth' }); }
+    toast('Please register or sign in above to cast your vote');
+    const vb = $('voter-bar');
+    if (vb) { vb.scrollIntoView({ behavior: 'smooth' }); }
   });
   document.querySelectorAll('[data-f]').forEach(b => b.onclick = () => openFb(b.dataset.f));
   document.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => openEditEmp(b.dataset.edit));
@@ -1146,27 +1192,27 @@ function render() {
   document.querySelectorAll('img.av').forEach(i => i.onclick = () => openZoom(i.src, i.alt));
 }
 
-// Render Voter Login / Session Header Bar
+// Render Employee Login & Registration Area
 function renderVoterBar() {
   const vb = $('voter-bar');
   if (curVoter) {
     vb.innerHTML = `
-      <div class="panel" style="border-left: 4px solid var(--ok); background: var(--card)">
+      <div class="panel" style="border-left: 5px solid var(--ok); background: var(--card)">
         <div class="row" style="justify-content:space-between">
           <div>
             <div style="font-weight:800;font-size:1.05rem">
-              👤 Logged in as: <span style="color:var(--acc)">${esc(curVoter.name)}</span>
+              👤 Logged In: <span style="color:var(--acc)">${esc(curVoter.name)}</span>
               <span class="note" style="margin-left:6px">(${esc(curVoter.role || 'Staff')})</span>
             </div>
             <div style="margin-top:4px">
               ${voterState.hasVoted ? `
                 <span class="pill ok">✓ Voted for ${esc(voterState.votedFor)} (${esc(voterState.votedTime)})</span>
               ` : `
-                <span class="pill warn">⏳ You have NOT voted yet — please cast your vote below</span>
+                <span class="pill warn">⏳ You have NOT voted yet — choose a colleague below!</span>
               `}
             </div>
           </div>
-          <button class="g sm" id="voter-logout" style="margin-left:auto">Switch Employee / Log Out</button>
+          <button class="g sm" id="voter-logout" style="margin-left:auto">Log Out / Switch User</button>
         </div>
       </div>
     `;
@@ -1174,40 +1220,104 @@ function renderVoterBar() {
       curVoter = null;
       voterState = { hasVoted: false, votedFor: null, votedTime: null };
       localStorage.removeItem('eom_voter_id');
-      toast('Logged out from employee account');
+      toast('Logged out');
       render();
     };
   } else {
     vb.innerHTML = `
       <div class="panel">
-        <h3 style="margin-bottom:6px">👤 Employee Login & Verification</h3>
-        <p class="note" style="margin-top:0;margin-bottom:12px">
-          Select your name to cast your vote. This confirms who has voted and who is still pending.
-        </p>
-        <div class="row">
-          <select id="voter-select">
-            <option value="">-- Select Your Name --</option>
-            ${D.emps.map(e => `<option value="${e.id}">${esc(e.name)} (${esc(e.role || 'Staff')})</option>`).join('')}
-          </select>
-          <input id="voter-pin" type="password" value="1111" placeholder="PIN (Default: 1111)" style="max-width:140px">
-          <button id="voter-login-btn">Login to Vote</button>
+        <div class="auth-tabs">
+          <button class="auth-tab ${activeAuthTab === 'register' ? 'active' : ''}" id="tab-reg">✨ New Employee? Register Here</button>
+          <button class="auth-tab ${activeAuthTab === 'login' ? 'active' : ''}" id="tab-login">🔑 Existing Employee Sign In</button>
         </div>
-        <div class="note">💡 Default employee PIN is <b>1111</b>. You cannot vote for yourself.</div>
+
+        ${activeAuthTab === 'register' ? `
+          <!-- Self-Registration Form -->
+          <div>
+            <p class="note" style="margin-top:0;margin-bottom:12px">
+              Join the voting contest! Fill in your details below to register yourself and cast your vote.
+            </p>
+            <div class="row" style="margin-bottom:10px">
+              <input id="reg-name" placeholder="Your Full Name (e.g. Alex Morgan)" required>
+              <input id="reg-role" placeholder="Your Role / Department (e.g. Marketing)">
+            </div>
+            <div class="row" style="margin-bottom:10px">
+              <div style="flex:1;min-width:140px">
+                <span class="note" style="display:block;margin-bottom:4px">Your Photo (optional):</span>
+                <input id="reg-photo-file" type="file" accept="image/*" style="font-size:12px;padding:6px">
+              </div>
+              <div style="flex:1;min-width:140px">
+                <span class="note" style="display:block;margin-bottom:4px">Create a PIN (to log in later):</span>
+                <input id="reg-pin" type="password" placeholder="Create your 4-digit PIN" maxlength="12" style="font-weight:700">
+              </div>
+            </div>
+            <button id="reg-submit-btn" style="width:100%;margin-top:4px">Register & Proceed to Vote</button>
+          </div>
+        ` : `
+          <!-- Existing Employee Login Form -->
+          <div>
+            <p class="note" style="margin-top:0;margin-bottom:12px">
+              Welcome back! Select your name and enter your secret PIN to vote.
+            </p>
+            <div class="row">
+              <select id="voter-select">
+                <option value="">-- Select Your Registered Name --</option>
+                ${D.emps.map(e => `<option value="${e.id}">${esc(e.name)} (${esc(e.role || 'Staff')})</option>`).join('')}
+              </select>
+              <input id="voter-pin" type="password" placeholder="Enter Your PIN" style="max-width:150px">
+              <button id="voter-login-btn">Sign In to Vote</button>
+            </div>
+          </div>
+        `}
       </div>
     `;
-    $('voter-login-btn').onclick = async () => {
-      const eid = $('voter-select').value;
-      if (!eid) return toast('Please select your name from the list');
-      const p = $('voter-pin').value.trim() || '1111';
-      try {
-        const res = await run('empLogin', eid, p);
-        curVoter = res.emp;
-        voterState = res;
-        localStorage.setItem('eom_voter_id', curVoter.id);
-        toast(`Welcome, ${curVoter.name}!`);
-        render();
-      } catch(e) { err(e); }
-    };
+
+    $('tab-reg').onclick = () => { activeAuthTab = 'register'; render(); };
+    $('tab-login').onclick = () => { activeAuthTab = 'login'; render(); };
+
+    if ($('reg-submit-btn')) {
+      $('reg-submit-btn').onclick = async () => {
+        const name = $('reg-name').value.trim();
+        const role = $('reg-role').value.trim();
+        const pinVal = $('reg-pin').value.trim();
+        if (!name) return toast('Please enter your full name');
+        if (!pinVal) return toast('Please create a PIN for your account');
+
+        let photoBase64 = '';
+        try {
+          const file = $('reg-photo-file').files[0];
+          if (file) photoBase64 = await compressImage(file);
+        } catch(e) {
+          return toast('Could not process that photo');
+        }
+
+        try {
+          const newEmp = await run('empRegister', name, role, photoBase64, pinVal);
+          curVoter = newEmp;
+          voterState = { hasVoted: false, votedFor: null, votedTime: null };
+          localStorage.setItem('eom_voter_id', newEmp.id);
+          toast(`🎉 Welcome, ${newEmp.name}! Your profile is ready. Cast your vote below!`);
+          await load();
+        } catch(e) { err(e); }
+      };
+    }
+
+    if ($('voter-login-btn')) {
+      $('voter-login-btn').onclick = async () => {
+        const eid = $('voter-select').value;
+        if (!eid) return toast('Please select your name from the list');
+        const p = $('voter-pin').value.trim();
+        if (!p) return toast('Please enter your PIN');
+        try {
+          const res = await run('empLogin', eid, p);
+          curVoter = res.emp;
+          voterState = res;
+          localStorage.setItem('eom_voter_id', curVoter.id);
+          toast(`Welcome, ${curVoter.name}!`);
+          render();
+        } catch(e) { err(e); }
+      };
+    }
   }
 }
 
@@ -1226,12 +1336,12 @@ function renderAdminPanel(adminOn) {
     <div class="panel" style="border: 2px solid var(--acc)">
       <div class="row" style="justify-content:space-between;margin-bottom:12px">
         <h3 style="margin:0">⚙️ Admin Dashboard & Audit</h3>
-        <span class="pill">PIN: ${esc(pin)}</span>
+        <button class="g sm" id="adm-change-pin-btn">🔒 Change Admin PIN</button>
       </div>
 
       <!-- Add New Employee Form -->
       <div style="background:var(--bg);padding:14px;border-radius:14px;margin-bottom:16px;border:1px solid var(--line)">
-        <h4 style="margin:0 0 10px;font-size:0.95rem">➕ Add New Employee</h4>
+        <h4 style="margin:0 0 10px;font-size:0.95rem">➕ Add Employee Directly</h4>
         <div class="row" style="margin-bottom:8px">
           <input id="en" placeholder="Employee Full Name (required)">
           <input id="er" placeholder="Role / Department (e.g. Sales Lead)">
@@ -1267,7 +1377,7 @@ function renderAdminPanel(adminOn) {
 
       <!-- Roster Management Section -->
       <div style="margin-bottom:18px">
-        <h4 style="margin:0 0 8px;font-size:0.95rem">👥 Manage Employees (${A.employees.length})</h4>
+        <h4 style="margin:0 0 8px;font-size:0.95rem">👥 Manage Registered Employees (${A.employees.length})</h4>
         <div style="max-height: 280px; overflow-y: auto; padding-right: 4px;">
           ${A.employees.map(emp => `
             <div class="emp-manage-item">
@@ -1278,7 +1388,7 @@ function renderAdminPanel(adminOn) {
               `}
               <div class="emp-manage-info">
                 <div class="emp-manage-name">${esc(emp.name)}</div>
-                <div class="emp-manage-role">${esc(emp.role || 'No role specified')}</div>
+                <div class="emp-manage-role">${esc(emp.role || 'Staff')}</div>
               </div>
               <button class="g sm" data-edit="${emp.id}">📷 Edit / Photo</button>
               <button class="g danger sm" data-d="${emp.id}">${armed === 'd' + emp.id ? 'Sure?' : '✕'}</button>
@@ -1363,6 +1473,17 @@ function renderAdminPanel(adminOn) {
     }
   };
 
+  $('adm-change-pin-btn').onclick = () => {
+    const np = prompt('Enter your new secret Admin PIN (at least 4 characters):');
+    if (np) {
+      try {
+        const updated = RPC.changeAdminPin(pin, np);
+        pin = updated;
+        toast('Admin PIN changed successfully!');
+      } catch(e) { err(e); }
+    }
+  };
+
   const reminderBtn = $('copy-reminder-btn');
   if (reminderBtn) {
     reminderBtn.onclick = () => {
@@ -1412,7 +1533,7 @@ function arm(k) {
 // Voting execution
 async function doVote(candidateId) {
   if (!curVoter) {
-    return toast('Please select your name above to login and vote');
+    return toast('Please register or log in above to vote');
   }
   if (armed !== candidateId) return arm(candidateId);
   armed = null;
@@ -1441,7 +1562,7 @@ async function doDel(id) {
   } catch(e) { err(e); }
 }
 
-// Add New Employee
+// Add New Employee directly by Admin
 async function addEmp() {
   const n = $('en').value.trim();
   if (!n) return toast('Please enter an employee name.');
@@ -1462,7 +1583,7 @@ async function addEmp() {
   } catch(e) { err(e); }
 }
 
-// Edit Existing Employee Modal (Change Name, Role, Upload / Replace Photo)
+// Edit Existing Employee Modal (Change Name, Role, Upload / Replace Photo, Reset PIN)
 function openEditEmp(empId) {
   const emp = D.emps.find(e => e.id === empId);
   if (!emp) return;
@@ -1471,7 +1592,7 @@ function openEditEmp(empId) {
   m.className = 'modal';
   m.innerHTML = `
     <div class="box">
-      <h3 style="margin:0 0 12px">✏️ Edit Employee & Photo</h3>
+      <h3 style="margin:0 0 12px">✏️ Edit Employee Profile</h3>
       
       <div style="text-align:center;margin-bottom:14px">
         ${emp.photo ? `
@@ -1489,6 +1610,11 @@ function openEditEmp(empId) {
       <div style="margin-bottom:10px">
         <label class="note" style="display:block;margin-bottom:4px">Role / Department</label>
         <input id="edit-role" value="${esc(emp.role || '')}" style="width:100%">
+      </div>
+
+      <div style="margin-bottom:10px">
+        <label class="note" style="display:block;margin-bottom:4px">Employee PIN (for their login)</label>
+        <input id="edit-emp-pin" value="${esc(emp.pin || '1111')}" style="width:100%">
       </div>
 
       <div style="margin-bottom:10px;background:var(--bg);padding:10px;border-radius:10px;border:1px solid var(--line)">
@@ -1517,7 +1643,6 @@ function openEditEmp(empId) {
 
   let newPhotoBase64 = emp.photo;
 
-  // File input preview & compression
   m.querySelector('#edit-file').onchange = async (ev) => {
     const file = ev.target.files[0];
     if (file) {
@@ -1550,6 +1675,7 @@ function openEditEmp(empId) {
   m.querySelector('#edit-save').onclick = async () => {
     const newName = m.querySelector('#edit-name').value.trim();
     const newRole = m.querySelector('#edit-role').value.trim();
+    const newPin = m.querySelector('#edit-emp-pin').value.trim();
     const urlInput = m.querySelector('#edit-url').value.trim();
     if (!newName) return toast('Employee name is required');
 
@@ -1559,7 +1685,7 @@ function openEditEmp(empId) {
     }
 
     try {
-      await run('editEmp', pin, emp.id, newName, newRole, finalPhoto);
+      await run('editEmp', pin, emp.id, newName, newRole, finalPhoto, newPin);
       m.remove();
       toast('✓ Employee updated and saved permanently!');
       await load();
@@ -1670,17 +1796,16 @@ function openZoom(src, name) {
   img.onpointerup = img.onpointercancel = ev => pts.delete(ev.pointerId);
 }
 
-// Admin PIN Login
+// Secure Admin Login — Zero PIN shown publicly
 $('alink').onclick = e => {
   e.preventDefault();
   const m = document.createElement('div');
   m.className = 'modal';
   m.innerHTML = `
     <div class="box">
-      <h3 style="margin:0 0 6px">Admin Login</h3>
-      <div class="note" style="margin-bottom:12px">Default PIN is <b>1234</b></div>
+      <h3 style="margin:0 0 12px">⚙️ Admin Authentication</h3>
       <div class="row">
-        <input id="ap" type="password" placeholder="Enter Admin PIN" autofocus>
+        <input id="ap" type="password" placeholder="Enter Secret Admin PIN" autofocus style="font-size:16px">
         <button data-s>Sign In</button>
         <button class="g" data-c>Cancel</button>
       </div>
