@@ -1,32 +1,46 @@
-# 🏆 Employee of the Month — Anonymous Voting Dashboard
+# 🏆 Employee of the Month — Voting & Verification Dashboard
 
-A mobile-first, interactive, and completely anonymous voting web app that works right out of the box with **zero database configuration required**. 
+A mobile-first, interactive, and verified employee voting system where staff log in, cast their vote for colleagues, and administrators can audit participation, verify who has voted for whom, and manage employee profiles and photos.
 
 🔗 **Live URL:** [https://employee-of-the-month-pink.vercel.app](https://employee-of-the-month-pink.vercel.app)
 
 ---
 
-## ✨ Features
+## ✨ Key Features
 
-- **📱 Mobile-First & WhatsApp-Ready:** Direct "Share on WhatsApp" button with pre-filled message and link preview.
-- **🗳️ Anonymous Voting:** Staff enter a one-time voting code (e.g. `VOTE01`, `VOTE02`, etc.) and confirm their vote with a two-tap confirmation. Ballots store only the employee ID and month—never the voter or code.
-- **💬 Anonymous Feedback:** Submit compliments or constructive suggestions for each employee, viewable exclusively by the admin.
-- **🔍 Pinch & Touch Photo Zoom:** Smooth modal zoom supporting touch pinch, double-tap, mouse wheel, panning, and zoom controls.
-- **⚙️ Admin Dashboard (PIN: `1234`):**
-  - Add new staff candidates with photo upload (auto-compressed on device).
-  - Remove employees with two-tap confirm.
-  - Generate and view batches of single-use voting codes.
-  - Read all anonymous compliments and suggestions.
-  - Toggle **Reveal Winner** to announce the winner with crown badges and vote counts.
-  - Reset to default demo data anytime with 1 tap.
-- **⚡ Zero Configuration:** Everything persists cleanly in the client browser (`localStorage`), eliminating the need for external database setup, API keys, or SQL migrations.
+### 👤 1. Employee Login & Voting Verification
+- **Verified Staff Voting:** Employees select their profile from the roster and enter their PIN (default PIN: `1111`) to log in.
+- **Vote Once Per Month:** The system tracks voting status for the current month. Once an employee votes, their ballot is permanently locked for that month.
+- **Self-Vote Prevention:** Employees cannot vote for themselves.
+- **Two-Tap Confirmation:** Confirms intent with an animated 3-second confirmation step.
+- **Session Switcher:** One-tap "Switch Employee / Log Out" so multiple team members can vote from a shared office tablet or phone.
+
+### 📊 2. Admin Audit: Who Voted For Whom
+- **Live Participation Stats:** Real-time summary of Total Employees, Votes Cast, Pending Voters, and Turnout percentage.
+- **Who Voted For Whom Table:** Admin can inspect the full voting audit showing exactly which employee voted for which candidate, complete with date and time.
+- **Pending Voters List:** Displays names of all employees who haven't voted yet, with a **"Copy WhatsApp Reminder"** button to nudge pending staff with one tap.
+
+### 🖼️ 3. Employee Management & Photo Upload/Editing
+- **Permanent Saving:** Optimized, compact image compression (150x150 Retina square thumbnails, ~6KB) prevents storage quota failures and ensures newly added employees are permanently saved.
+- **Upload / Replace Photos Anytime:** Added an **"📷 Edit / Photo"** option for every employee. If an employee was added with only a name, admin can upload a photo file or paste an image URL at any time.
+- **Update Names & Roles:** Edit employee details, roles, or remove photos back to initials.
+
+### 📲 4. Instant WhatsApp Sharing with Roster Sync
+- **Share on WhatsApp:** Tap the WhatsApp button to share the voting link with team members.
+- **Automatic Roster Syncing:** Newly added employees are encoded into the share link, ensuring that when staff tap the WhatsApp link on their phones, the latest roster is automatically updated and saved in their local session!
 
 ---
 
-## 🚀 Instant Quick Start
+## 🚀 Quick Start Guide
 
 1. Open [https://employee-of-the-month-pink.vercel.app](https://employee-of-the-month-pink.vercel.app).
-2. Tap one of the **Quick test codes** (e.g. `VOTE01`) and tap **Submit Code**.
-3. Tap **Vote for [Employee]** and tap again within 3 seconds to confirm.
-4. Tap **Admin Login** at the bottom, enter PIN `1234`, and explore the admin controls!
-5. Tap **Share on WhatsApp** in the top bar to share the link with colleagues.
+2. **Employee Login:**
+   - Select an employee name from the dropdown.
+   - Enter PIN `1111` and tap **Login to Vote**.
+   - Browse colleague cards and tap **Vote for [Name]** → tap again within 3 seconds to confirm.
+3. **Admin Dashboard:**
+   - Tap **⚙️ Admin Login** at the bottom.
+   - Enter Admin PIN `1234`.
+   - View **"Who Has Voted For Whom"** and **"Pending Voters"**.
+   - Add new employees or tap **📷 Edit / Photo** on existing staff to upload photos.
+   - Tap **🎉 Reveal Winner to Everyone** when voting is complete!
