@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Employee of the Month</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#1d2433;--mute:#667085;--line:#e4e0d6;--acc:#b4540a;--acc2:#fbe9d6;--ok:#17803d}
+@media (prefers-color-scheme:dark){:root{--bg:#14161b;--card:#1d2028;--ink:#eef0f4;--mute:#9aa3b2;--line:#2b2f3a;--acc:#f0a35e;--acc2:#3a2a1a;--ok:#4cc27a}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.45}
+main{max-width:1000px;margin:0 auto;padding:16px 12px 40px}h1{margin:0;font-size:1.5rem}
+.sub,.note{color:var(--mute);font-size:.85rem}.bar{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;margin-bottom:14px}
+.pill{background:var(--acc2);color:var(--acc);border-radius:99px;padding:5px 12px;font-size:.85rem;font-weight:600}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}.panel h3{margin:0 0 10px;font-size:1rem}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+input,textarea{padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font:inherit;font-size:16px;flex:1;min-width:140px}
+textarea{width:100%;min-height:100px}
+button{cursor:pointer;border:0;border-radius:9px;padding:10px 14px;min-height:42px;font-weight:600;font-size:.92rem;background:var(--acc);color:#fff}
+button.g{background:transparent;color:var(--mute);border:1px solid var(--line)}button:disabled{opacity:.5}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}@media(min-width:600px){.grid{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 8px;text-align:center;position:relative}
+.card.win{border:2px solid var(--acc);box-shadow:0 6px 24px rgba(180,84,10,.25)}
+.av{width:88px;height:88px;border-radius:50%;object-fit:cover;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;background:var(--acc2);color:var(--acc);font-size:1.8rem;font-weight:700;border:3px solid var(--line)}
+img.av{cursor:zoom-in}.nm{font-weight:700}.rl{color:var(--mute);font-size:.82rem;margin-bottom:8px;min-height:1.1em}.cnt{font-size:1.3rem;font-weight:800;color:var(--acc)}
+.crown{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--acc);color:#fff;border-radius:99px;padding:2px 12px;font-size:.78rem;font-weight:700}
+.card button{width:100%;margin-top:6px}.card .g{font-size:.78rem;padding:8px 4px}
+.banner{text-align:center;padding:22px 12px;border-radius:18px;background:linear-gradient(135deg,var(--acc),#d98a3d);color:#fff;margin-bottom:14px}.banner h2{margin:6px 0 0;font-size:1.6rem}
+.msg{color:var(--mute);text-align:center;padding:22px 8px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;padding:16px;z-index:50}
+.box{background:var(--card);border-radius:16px;padding:16px;max-width:440px;width:100%}
+.seg{display:flex;gap:8px;margin:10px 0}.seg button{flex:1;background:transparent;color:var(--ink);border:1px solid var(--line)}.seg .on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.fi{border-left:3px solid var(--acc);padding:6px 10px;margin:6px 0;background:var(--bg);border-radius:6px;font-size:.9rem}.fi.c{border-color:var(--ok)}
+.zw{width:min(92vw,520px);height:min(65vh,520px);overflow:hidden;border-radius:16px;background:#000;display:flex;align-items:center;justify-content:center;touch-action:none}
+.zi{max-width:100%;max-height:100%;touch-action:none;user-select:none}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:99px;z-index:99;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center}#toast.s{opacity:1}
+</style></head><body><main>
+<div class="bar"><div><h1>🏆 Employee of the Month</h1><div class="sub" id="mo"></div></div><span class="pill" id="st">Loading…</span></div>
+<div id="adm"></div><div id="win"></div><div id="app"><div class="msg">Loading…</div></div>
+<p class="note">Voting is anonymous: your voting code is never linked to your vote. Each code can vote once per month. Compliments and suggestions are anonymous and read only by the admin.</p>
+<p class="note"><a href="#" id="alink" style="color:var(--mute)">Admin</a></p>
+</main><div id="toast"></div>
+<script>
+const $=id=>document.getElementById(id),esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const SUPABASE_URL='PASTE_YOUR_SUPABASE_PROJECT_URL',SUPABASE_ANON_KEY='PASTE_YOUR_SUPABASE_ANON_PUBLIC_KEY';
+const SB=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+const P={pub:()=>['pub',{}],chk:c=>['chk',{p_code:c}],vote:(c,i)=>['vote',{p_code:c,p_cid:i}],fb:(c,e,k,t)=>['fb',{p_code:c,p_eid:e,p_kind:k,p_text:t}],adm:p=>['adm',{p_pin:p}],addEmp:(p,n,r,ph)=>['add_emp',{p_pin:p,p_name:n,p_role:r,p_photo:ph}],delEmp:(p,i)=>['del_emp',{p_pin:p,p_id:i}],setRev:(p,o)=>['set_rev',{p_pin:p,p_on:o}],mkCodes:(p,n)=>['mk_codes',{p_pin:p,p_n:+n}]};
+const run=async(f,...a)=>{const [fn,args]=P[f](...a);const {data,error}=await SB.rpc(fn,args);if(error)throw new Error(error.message);return data};
+const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k)||'';localStorage.setItem(k,v)}catch(e){return ''}};
+function toast(t){const e=$('toast');e.textContent=t;e.className='s';clearTimeout(e._t);e._t=setTimeout(()=>e.className='',3500)}
+const err=e=>toast((e&&e.message||String(e)).replace(/^Error:\s*/,''));
+let D={emps:[],counts:{}},code=ls('c'),used=false,pin=null,A=null,armed=null,newCodes='';
+$('mo').textContent=new Date().toLocaleString('en-IN',{month:'long',year:'numeric'})+' · vote for your colleague of the month';
+const ini=n=>n.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+const av=e=>e.photo?`<img class="av" src="${esc(e.photo)}" alt="${esc(e.name)}">`:`<div class="av">${esc(ini(e.name))}</div>`;
+
+async function load(){
+  try{D=await run('pub');}catch(e){err(e);}
+  if(code){try{used=(await run('chk',code)).used}catch(e){code='';ls('c','');}}
+  if(pin){try{A=await run('adm',pin)}catch(e){pin=null;A=null;err(e)}}
+  render();
+}
+function render(){
+  const adminOn=!!(pin&&A),c=adminOn?A.counts:D.counts,show=adminOn||D.rev,total=adminOn?A.total:D.total;
+  $('st').textContent=total+' vote'+(total===1?'':'s')+' cast'+(D.rev?' · results are out':'');
+  // admin panel
+  $('adm').innerHTML=adminOn?`<div class="panel"><h3>Admin panel</h3>
+   <div class="row"><input id="en" placeholder="Employee name"><input id="er" placeholder="Role (optional)"><input id="ep" type="file" accept="image/*"><button id="add">Add employee</button></div>
+   <div class="row" style="margin-top:12px"><input id="nc" type="number" min="1" max="300" value="10" style="max-width:90px"><button id="mk">Generate voting codes</button><span class="note">${A.used} of ${A.codes} codes used this month</span></div>
+   ${newCodes?`<textarea id="ct" readonly>${esc(newCodes)}</textarea><div class="note">Give one code to each staff member (copy this list).</div>`:''}
+   <div class="row" style="margin-top:12px"><button id="rv">${D.rev?'Hide results':'Reveal winner to everyone'}</button><button class="g" id="ex">Exit admin</button></div></div>
+   <div class="panel"><h3>Anonymous feedback (only you see this)</h3>${fbHtml()}</div>`:'';
+  if(adminOn){
+    $('add').onclick=addEmp;$('ex').onclick=()=>{pin=null;A=null;newCodes='';render()};
+    $('mk').onclick=async()=>{try{newCodes=(await run('mkCodes',pin,$('nc').value)).join('\n');await load()}catch(e){err(e)}};
+    $('rv').onclick=async()=>{try{await run('setRev',pin,!D.rev);await load()}catch(e){err(e)}};
+  }
+  const mx=Math.max(0,...D.emps.map(e=>c[e.id]||0)),win=D.rev&&mx>0?D.emps.filter(e=>(c[e.id]||0)===mx):[];
+  $('win').innerHTML=win.length?`<div class="banner"><div>🎉 Employee of the Month 🎉</div><h2>${win.map(w=>esc(w.name)).join(' & ')}</h2><div>${mx} vote${mx>1?'s':''}${win.length>1?' each (tie)':''}</div></div>`:'';
+  let h='';
+  if(!code&&!adminOn)h=`<div class="panel"><h3>Enter your voting code</h3><div class="row"><input id="cd" placeholder="e.g. K7M2QX" autocapitalize="characters"><button id="go">Continue</button></div><div class="note">Your admin gives each staff member one code.</div></div>`;
+  if(!D.emps.length)h+=`<div class="msg">No employees added yet. Please check back soon.</div>`;
+  else{
+    const l=D.rev?[...D.emps].sort((a,b)=>(c[b.id]||0)-(c[a.id]||0)):D.emps;
+    h+='<div class="grid">'+l.map(e=>`<div class="card${win.some(w=>w.id===e.id)?' win':''}">${win.some(w=>w.id===e.id)?'<span class="crown">WINNER</span>':''}${av(e)}<div class="nm">${esc(e.name)}</div><div class="rl">${esc(e.role)}</div>
+     ${show?`<div class="cnt">${c[e.id]||0} <span class="note">votes</span></div>`:''}
+     ${code&&!used&&!D.rev?`<button data-v="${e.id}">${armed===e.id?'Tap again to confirm':'Vote'}</button>`:''}
+     ${code?`<button class="g" data-f="${e.id}">✍️ Compliment or suggestion</button>`:''}
+     ${adminOn?`<button class="g" data-d="${e.id}">${armed==='d'+e.id?'Remove?':'✕ Remove'}</button>`:''}</div>`).join('')+'</div>';
+    if(code&&used&&!D.rev)h+='<p class="msg">✓ Thanks! Your vote is recorded anonymously. The winner will be revealed by the admin.</p>';
+  }
+  $('app').innerHTML=h;
+  if($('go'))$('go').onclick=async()=>{const v=$('cd').value.trim().toUpperCase();try{used=(await run('chk',v)).used;code=v;ls('c',v);render()}catch(e){err(e)}};
+  document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>doVote(b.dataset.v));
+  document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>openFb(b.dataset.f));
+  document.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>doDel(b.dataset.d));
+  document.querySelectorAll('img.av').forEach(i=>i.onclick=()=>openZoom(i.src,i.alt));
+}
+function fbHtml(){
+  if(!A.fb.length)return '<div class="note">No feedback yet this month.</div>';
+  return D.emps.map(e=>{const l=A.fb.filter(f=>f.eid===e.id);return l.length?`<div style="margin-top:10px"><b>${esc(e.name)}</b>${l.map(f=>`<div class="fi ${f.kind[0]}">${f.kind==='compliment'?'👏 Compliment':'💡 Suggestion'}: ${esc(f.text)}</div>`).join('')}</div>`:''}).join('');
+}
+function arm(k){armed=k;render();setTimeout(()=>{if(armed===k){armed=null;render()}},3000)}
+async function doVote(id){
+  if(armed!==id)return arm(id);armed=null;
+  try{await run('vote',code,id);used=true;toast('Vote recorded. Thank you!');await load()}catch(e){err(e);await load()}
+}
+async function doDel(id){
+  if(armed!=='d'+id)return arm('d'+id);armed=null;
+  try{await run('delEmp',pin,id);await load()}catch(e){err(e)}
+}
+function shrink(f){return new Promise((ok,no)=>{const r=new FileReader();r.onerror=no;r.onload=()=>{const i=new Image();i.onerror=no;i.onload=()=>{
+  let s=Math.min(420,i.width,i.height),q=.8,u;const cv=document.createElement('canvas');
+  for(let t=0;t<8;t++){cv.width=cv.height=s;const k=Math.min(i.width,i.height);cv.getContext('2d').drawImage(i,(i.width-k)/2,(i.height-k)/2,k,k,0,0,s,s);u=cv.toDataURL('image/jpeg',q);if(u.length<45000)break;q-=.1;s=Math.round(s*.85)}
+  ok(u)};i.src=r.result};r.readAsDataURL(f)})}
+async function addEmp(){
+  const n=$('en').value.trim();if(!n)return toast('Please enter a name.');
+  let p='';try{const f=$('ep').files[0];if(f)p=await shrink(f)}catch(e){return toast('Could not read that photo.')}
+  try{await run('addEmp',pin,n,$('er').value.trim(),p);toast('Employee added');await load()}catch(e){err(e)}
+}
+function openFb(eid){
+  const e=D.emps.find(x=>x.id===eid);if(!e)return;let kind='compliment';
+  const m=document.createElement('div');m.className='modal';
+  m.innerHTML=`<div class="box"><h3 style="margin:0">Feedback for ${esc(e.name)}</h3><div class="note">Anonymous: your name or code is never saved with this.</div><div class="seg"><button data-k="compliment" class="on">👏 Compliment</button><button data-k="suggestion">💡 Suggestion</button></div><textarea maxlength="600" placeholder="Write your message…"></textarea><div class="row" style="margin-top:10px;justify-content:flex-end"><button class="g" data-c>Cancel</button><button data-s>Send</button></div></div>`;
+  document.body.appendChild(m);
+  m.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{kind=b.dataset.k;m.querySelectorAll('[data-k]').forEach(x=>x.classList.toggle('on',x===b))});
+  m.querySelector('[data-c]').onclick=()=>m.remove();
+  m.querySelector('[data-s]').onclick=async()=>{const t=m.querySelector('textarea').value.trim();if(!t)return toast('Please write something first.');
+    try{await run('fb',code,eid,kind,t);m.remove();toast('Thank you! Sent anonymously.')}catch(x){err(x)}};
+}
+function openZoom(src,name){
+  let z=1,x=0,y=0,d0=1,z0=1;const pts=new Map(),m=document.createElement('div');m.className='modal';
+  m.innerHTML=`<div style="color:#fff;font-weight:700">${esc(name)}</div><div class="zw"><img class="zi" src="${esc(src)}" alt=""></div><div class="row"><button data-o>− Zoom out</button><button data-i>+ Zoom in</button><button class="g" data-r style="color:#fff">Reset</button><button class="g" data-x style="color:#fff">Close</button></div><div style="color:#ccc;font-size:.8rem">Pinch, scroll or double-tap to zoom · drag to move</div>`;
+  document.body.appendChild(m);
+  const img=m.querySelector('.zi'),ap=()=>{img.style.transform=`translate(${x}px,${y}px) scale(${z})`},sz=v=>{z=Math.min(5,Math.max(1,v));if(z===1)x=y=0;ap()};
+  m.querySelector('[data-i]').onclick=()=>sz(z+.5);m.querySelector('[data-o]').onclick=()=>sz(z-.5);m.querySelector('[data-r]').onclick=()=>sz(1);m.querySelector('[data-x]').onclick=()=>m.remove();
+  m.onclick=ev=>{if(ev.target===m)m.remove()};m.querySelector('.zw').onwheel=ev=>{ev.preventDefault();sz(z+(ev.deltaY<0?.3:-.3))};
+  img.ondblclick=()=>sz(z>1?1:2.5);
+  img.onpointerdown=ev=>{img.setPointerCapture(ev.pointerId);pts.set(ev.pointerId,[ev.clientX,ev.clientY]);if(pts.size===2){const[a,b]=[...pts.values()];d0=Math.hypot(a[0]-b[0],a[1]-b[1])||1;z0=z}};
+  img.onpointermove=ev=>{const p=pts.get(ev.pointerId);if(!p)return;pts.set(ev.pointerId,[ev.clientX,ev.clientY]);
+    if(pts.size===2){const[a,b]=[...pts.values()];sz(z0*Math.hypot(a[0]-b[0],a[1]-b[1])/d0)}else if(z>1){x+=ev.clientX-p[0];y+=ev.clientY-p[1];ap()}};
+  img.onpointerup=img.onpointercancel=ev=>pts.delete(ev.pointerId);
+}
+$('alink').onclick=e=>{e.preventDefault();const m=document.createElement('div');m.className='modal';
+  m.innerHTML='<div class="box"><h3 style="margin:0 0 10px">Admin login</h3><div class="row"><input id="ap" type="password" placeholder="Admin PIN"><button data-s>Open</button><button class="g" data-c>Cancel</button></div></div>';
+  document.body.appendChild(m);m.querySelector('[data-c]').onclick=()=>m.remove();
+  m.querySelector('[data-s]').onclick=async()=>{pin=m.querySelector('#ap').value;try{A=await run('adm',pin);m.remove();render()}catch(x){pin=null;err(x)}}};
+load();
+</script></body></html>
