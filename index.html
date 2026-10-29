@@ -1,147 +1,1253 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8">
+<html lang="en">
+<head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Employee of the Month</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<title>🏆 Employee of the Month</title>
+<!-- Open Graph tags for WhatsApp preview -->
+<meta property="og:title" content="🏆 Employee of the Month — Anonymous Voting">
+<meta property="og:description" content="Vote for your colleague of the month! Anonymous, fast, and mobile-friendly.">
+<meta property="og:type" content="website">
 <style>
-:root{--bg:#f6f4ef;--card:#fff;--ink:#1d2433;--mute:#667085;--line:#e4e0d6;--acc:#b4540a;--acc2:#fbe9d6;--ok:#17803d}
-@media (prefers-color-scheme:dark){:root{--bg:#14161b;--card:#1d2028;--ink:#eef0f4;--mute:#9aa3b2;--line:#2b2f3a;--acc:#f0a35e;--acc2:#3a2a1a;--ok:#4cc27a}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.45}
-main{max-width:1000px;margin:0 auto;padding:16px 12px 40px}h1{margin:0;font-size:1.5rem}
-.sub,.note{color:var(--mute);font-size:.85rem}.bar{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;margin-bottom:14px}
-.pill{background:var(--acc2);color:var(--acc);border-radius:99px;padding:5px 12px;font-size:.85rem;font-weight:600}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}.panel h3{margin:0 0 10px;font-size:1rem}
-.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-input,textarea{padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font:inherit;font-size:16px;flex:1;min-width:140px}
-textarea{width:100%;min-height:100px}
-button{cursor:pointer;border:0;border-radius:9px;padding:10px 14px;min-height:42px;font-weight:600;font-size:.92rem;background:var(--acc);color:#fff}
-button.g{background:transparent;color:var(--mute);border:1px solid var(--line)}button:disabled{opacity:.5}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}@media(min-width:600px){.grid{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 8px;text-align:center;position:relative}
-.card.win{border:2px solid var(--acc);box-shadow:0 6px 24px rgba(180,84,10,.25)}
-.av{width:88px;height:88px;border-radius:50%;object-fit:cover;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;background:var(--acc2);color:var(--acc);font-size:1.8rem;font-weight:700;border:3px solid var(--line)}
-img.av{cursor:zoom-in}.nm{font-weight:700}.rl{color:var(--mute);font-size:.82rem;margin-bottom:8px;min-height:1.1em}.cnt{font-size:1.3rem;font-weight:800;color:var(--acc)}
-.crown{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--acc);color:#fff;border-radius:99px;padding:2px 12px;font-size:.78rem;font-weight:700}
-.card button{width:100%;margin-top:6px}.card .g{font-size:.78rem;padding:8px 4px}
-.banner{text-align:center;padding:22px 12px;border-radius:18px;background:linear-gradient(135deg,var(--acc),#d98a3d);color:#fff;margin-bottom:14px}.banner h2{margin:6px 0 0;font-size:1.6rem}
-.msg{color:var(--mute);text-align:center;padding:22px 8px}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;padding:16px;z-index:50}
-.box{background:var(--card);border-radius:16px;padding:16px;max-width:440px;width:100%}
-.seg{display:flex;gap:8px;margin:10px 0}.seg button{flex:1;background:transparent;color:var(--ink);border:1px solid var(--line)}.seg .on{background:var(--acc);color:#fff;border-color:var(--acc)}
-.fi{border-left:3px solid var(--acc);padding:6px 10px;margin:6px 0;background:var(--bg);border-radius:6px;font-size:.9rem}.fi.c{border-color:var(--ok)}
-.zw{width:min(92vw,520px);height:min(65vh,520px);overflow:hidden;border-radius:16px;background:#000;display:flex;align-items:center;justify-content:center;touch-action:none}
-.zi{max-width:100%;max-height:100%;touch-action:none;user-select:none}
-#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:99px;z-index:99;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center}#toast.s{opacity:1}
-</style></head><body><main>
-<div class="bar"><div><h1>🏆 Employee of the Month</h1><div class="sub" id="mo"></div></div><span class="pill" id="st">Loading…</span></div>
-<div id="adm"></div><div id="win"></div><div id="app"><div class="msg">Loading…</div></div>
-<p class="note">Voting is anonymous: your voting code is never linked to your vote. Each code can vote once per month. Compliments and suggestions are anonymous and read only by the admin.</p>
-<p class="note"><a href="#" id="alink" style="color:var(--mute)">Admin</a></p>
-</main><div id="toast"></div>
-<script>
-const $=id=>document.getElementById(id),esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const SUPABASE_URL='PASTE_YOUR_SUPABASE_PROJECT_URL',SUPABASE_ANON_KEY='PASTE_YOUR_SUPABASE_ANON_PUBLIC_KEY';
-const SB=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-const P={pub:()=>['pub',{}],chk:c=>['chk',{p_code:c}],vote:(c,i)=>['vote',{p_code:c,p_cid:i}],fb:(c,e,k,t)=>['fb',{p_code:c,p_eid:e,p_kind:k,p_text:t}],adm:p=>['adm',{p_pin:p}],addEmp:(p,n,r,ph)=>['add_emp',{p_pin:p,p_name:n,p_role:r,p_photo:ph}],delEmp:(p,i)=>['del_emp',{p_pin:p,p_id:i}],setRev:(p,o)=>['set_rev',{p_pin:p,p_on:o}],mkCodes:(p,n)=>['mk_codes',{p_pin:p,p_n:+n}]};
-const run=async(f,...a)=>{const [fn,args]=P[f](...a);const {data,error}=await SB.rpc(fn,args);if(error)throw new Error(error.message);return data};
-const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k)||'';localStorage.setItem(k,v)}catch(e){return ''}};
-function toast(t){const e=$('toast');e.textContent=t;e.className='s';clearTimeout(e._t);e._t=setTimeout(()=>e.className='',3500)}
-const err=e=>toast((e&&e.message||String(e)).replace(/^Error:\s*/,''));
-let D={emps:[],counts:{}},code=ls('c'),used=false,pin=null,A=null,armed=null,newCodes='';
-$('mo').textContent=new Date().toLocaleString('en-IN',{month:'long',year:'numeric'})+' · vote for your colleague of the month';
-const ini=n=>n.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
-const av=e=>e.photo?`<img class="av" src="${esc(e.photo)}" alt="${esc(e.name)}">`:`<div class="av">${esc(ini(e.name))}</div>`;
+:root {
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --ink: #0f172a;
+  --mute: #64748b;
+  --line: #e2e8f0;
+  --acc: #ea580c;
+  --acc-hover: #c2410c;
+  --acc2: #ffedd5;
+  --ok: #16a34a;
+  --wa: #25d366;
+  --wa-hover: #128c7e;
+  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --ink: #f8fafc;
+    --mute: #94a3b8;
+    --line: #334155;
+    --acc: #f97316;
+    --acc-hover: #fb923c;
+    --acc2: #431407;
+    --ok: #22c55e;
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4);
+  }
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  padding-bottom: 60px;
+}
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px 14px 40px;
+}
+h1 {
+  margin: 0;
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.sub {
+  color: var(--mute);
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+.header-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+  background: var(--card);
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+@media (min-width: 640px) {
+  .header-bar {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.pill {
+  background: var(--acc2);
+  color: var(--acc);
+  border-radius: 9999px;
+  padding: 5px 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-wa {
+  background: #25d366;
+  color: #fff;
+  border: 0;
+  border-radius: 9999px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  box-shadow: 0 2px 5px rgba(37, 211, 102, 0.3);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.btn-wa:hover {
+  background: #1eb956;
+  transform: translateY(-1px);
+}
+.btn-wa svg {
+  width: 17px;
+  height: 17px;
+  fill: currentColor;
+}
+.panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+.panel h3 {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+input, textarea, select {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  flex: 1;
+  min-width: 140px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+input:focus, textarea:focus {
+  border-color: var(--acc);
+}
+textarea {
+  width: 100%;
+  min-height: 100px;
+  resize: vertical;
+}
+button {
+  cursor: pointer;
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 16px;
+  min-height: 42px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  background: var(--acc);
+  color: #fff;
+  transition: opacity 0.15s, transform 0.1s, background 0.15s;
+}
+button:hover:not(:disabled) {
+  background: var(--acc-hover);
+}
+button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+button.g {
+  background: transparent;
+  color: var(--mute);
+  border: 1px solid var(--line);
+}
+button.g:hover:not(:disabled) {
+  background: var(--bg);
+  color: var(--ink);
+}
+button.danger {
+  background: #ef4444;
+  color: #fff;
+}
+button.danger:hover:not(:disabled) {
+  background: #dc2626;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
-async function load(){
-  try{D=await run('pub');}catch(e){err(e);}
-  if(code){try{used=(await run('chk',code)).used}catch(e){code='';ls('c','');}}
-  if(pin){try{A=await run('adm',pin)}catch(e){pin=null;A=null;err(e)}}
+/* Grid Layout for Mobile & Desktop */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+    gap: 16px;
+  }
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 16px 10px 14px;
+  text-align: center;
+  position: relative;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+.card.win {
+  border: 2px solid var(--acc);
+  background: linear-gradient(180deg, var(--acc2) 0%, var(--card) 60px);
+  box-shadow: 0 8px 25px rgba(234, 88, 12, 0.2);
+}
+.av {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--acc2);
+  color: var(--acc);
+  font-size: 1.8rem;
+  font-weight: 800;
+  border: 3px solid var(--line);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+img.av {
+  cursor: zoom-in;
+}
+.nm {
+  font-weight: 800;
+  font-size: 1.05rem;
+  margin-top: 4px;
+  line-height: 1.25;
+}
+.rl {
+  color: var(--mute);
+  font-size: 0.8rem;
+  margin-top: 3px;
+  margin-bottom: 8px;
+  min-height: 2.4em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cnt {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--acc);
+  margin-bottom: 6px;
+}
+.crown {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--acc);
+  color: #fff;
+  border-radius: 9999px;
+  padding: 3px 12px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+}
+.card-actions {
+  width: 100%;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.card button {
+  width: 100%;
+  padding: 8px;
+  font-size: 0.85rem;
+}
+.card .g {
+  font-size: 0.78rem;
+  padding: 6px 4px;
+}
+.btn-confirm {
+  background: #ea580c !important;
+  animation: pulse 1s infinite alternate;
+}
+@keyframes pulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.03); }
+}
+
+/* Winner Banner */
+.banner {
+  text-align: center;
+  padding: 24px 14px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 50%, #fb923c 100%);
+  color: #fff;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 25px rgba(234, 88, 12, 0.35);
+  position: relative;
+  overflow: hidden;
+}
+.banner h2 {
+  margin: 6px 0 4px;
+  font-size: 1.8rem;
+  font-weight: 900;
+}
+.banner .sub-banner {
+  font-size: 1rem;
+  opacity: 0.95;
+  font-weight: 600;
+}
+
+/* Modals */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 100;
+}
+.box {
+  background: var(--card);
+  border-radius: 20px;
+  padding: 20px;
+  max-width: 440px;
+  width: 100%;
+  border: 1px solid var(--line);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.25);
+  animation: modalIn 0.2s ease-out;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.seg {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+.seg button {
+  flex: 1;
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+.seg .on {
+  background: var(--acc);
+  color: #fff;
+  border-color: var(--acc);
+}
+.fi {
+  border-left: 4px solid var(--acc);
+  padding: 8px 12px;
+  margin: 8px 0;
+  background: var(--bg);
+  border-radius: 8px;
+  font-size: 0.88rem;
+}
+.fi.c { border-color: var(--ok); }
+
+/* Zoom view */
+.zw {
+  width: min(92vw, 520px);
+  height: min(65vh, 520px);
+  overflow: hidden;
+  border-radius: 18px;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.zi {
+  max-width: 100%;
+  max-height: 100%;
+  touch-action: none;
+  user-select: none;
+  transition: transform 0.05s ease-out;
+}
+
+/* Toast */
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%) translateY(20px);
+  background: #0f172a;
+  color: #f8fafc;
+  padding: 10px 18px;
+  border-radius: 9999px;
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 90vw;
+  text-align: center;
+  font-size: 0.88rem;
+  font-weight: 600;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.4);
+}
+#toast.s {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.sample-codes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.code-chip {
+  background: var(--bg);
+  border: 1px dashed var(--line);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--acc);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.code-chip:hover {
+  background: var(--acc2);
+  border-color: var(--acc);
+}
+
+.note {
+  color: var(--mute);
+  font-size: 0.82rem;
+  margin: 8px 0 0;
+}
+.footer {
+  margin-top: 32px;
+  text-align: center;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+</style>
+</head>
+<body>
+<main>
+  <!-- Header Bar -->
+  <div class="header-bar">
+    <div>
+      <h1>🏆 Employee of the Month</h1>
+      <div class="sub" id="mo"></div>
+    </div>
+    <div class="header-actions">
+      <span class="pill" id="st">Loading…</span>
+      <a href="#" class="btn-wa" id="wa-share" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M12.031 2C6.495 2 2 6.495 2 12.031c0 1.97.57 3.81 1.558 5.37L2 22l4.757-1.528A9.97 9.97 0 0 0 12.031 22c5.536 0 10.031-4.495 10.031-10.031C22.062 6.495 17.567 2 12.031 2zm5.836 14.198c-.244.686-1.42 1.258-1.954 1.341-.534.084-1.226.118-3.957-.962-3.486-1.38-5.74-4.89-5.914-5.124-.174-.233-1.412-1.879-1.412-3.585 0-1.706.892-2.545 1.21-2.894.318-.35.693-.437.925-.437.233 0 .465.002.668.012.215.01.503-.082.787.6.294.706 1.002 2.44 1.089 2.617.087.177.145.385.029.618-.116.233-.174.378-.348.583-.174.204-.367.456-.525.612-.174.174-.356.363-.153.712.204.35 1.049 1.728 2.25 2.798 1.545 1.378 2.848 1.805 3.254 2.008.407.204.646.175.885-.102.24-.277 1.026-1.196 1.3-1.608.274-.412.547-.344.92-.204.374.14 2.373 1.119 2.78 1.323.407.204.678.305.779.476.102.171.102.991-.142 1.677z"/></svg>
+        Share on WhatsApp
+      </a>
+    </div>
+  </div>
+
+  <!-- Admin Panel Mount Point -->
+  <div id="adm"></div>
+
+  <!-- Winner Banner Mount Point -->
+  <div id="win"></div>
+
+  <!-- Main Content App -->
+  <div id="app">
+    <div style="text-align:center;padding:32px;color:var(--mute)">Loading voting system…</div>
+  </div>
+
+  <div class="footer">
+    <p class="note">🔒 100% Anonymous: Voting codes are never stored with votes. Compliments and suggestions are readable only by admin.</p>
+    <div>
+      <a href="#" id="alink" style="color:var(--mute);font-weight:600;font-size:0.85rem">⚙️ Admin Login (PIN: 1234)</a>
+    </div>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+/* -------------------------------------------------------------
+   Interactive Client-side Engine (No Supabase required)
+   Persists to localStorage so it works everywhere out of the box!
+------------------------------------------------------------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const ls = (k, v) => {
+  try {
+    if (v === undefined) return localStorage.getItem(k) || '';
+    localStorage.setItem(k, v);
+  } catch(e) { return ''; }
+};
+
+function toast(t) {
+  const e = $('toast');
+  e.textContent = t;
+  e.className = 's';
+  clearTimeout(e._t);
+  e._t = setTimeout(() => e.className = '', 3500);
+}
+const err = e => toast((e && e.message || String(e)).replace(/^Error:\s*/, ''));
+
+// Get current month string: '2026-10'
+const getMonthStr = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+};
+
+// Default Sample Data
+const DEFAULT_DATA = {
+  admin_pin: '1234',
+  rev: false,
+  employees: [
+    {
+      id: 'e1',
+      name: 'Sarah Chen',
+      role: 'Lead UI/UX Designer',
+      photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80',
+      created_at: 1000
+    },
+    {
+      id: 'e2',
+      name: 'Marcus Johnson',
+      role: 'Senior Backend Engineer',
+      photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
+      created_at: 2000
+    },
+    {
+      id: 'e3',
+      name: 'Priya Sharma',
+      role: 'Customer Success Lead',
+      photo: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&auto=format&fit=crop&q=80',
+      created_at: 3000
+    },
+    {
+      id: 'e4',
+      name: 'Alex Rivera',
+      role: 'DevOps & Cloud Architect',
+      photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80',
+      created_at: 4000
+    }
+  ],
+  codes: [
+    { code: 'VOTE01', used_month: '' },
+    { code: 'VOTE02', used_month: '' },
+    { code: 'VOTE03', used_month: '' },
+    { code: 'VOTE04', used_month: '' },
+    { code: 'VOTE05', used_month: '' },
+    { code: 'VOTE06', used_month: '' }
+  ],
+  ballots: [],
+  feedback: [
+    { month: getMonthStr(), eid: 'e1', kind: 'compliment', text: 'Sarah redesigned our entire mobile onboarding flow. Super helpful!' },
+    { month: getMonthStr(), eid: 'e3', kind: 'compliment', text: 'Priya always stays calm under pressure and helps everyone solve client issues.' },
+    { month: getMonthStr(), eid: 'e4', kind: 'suggestion', text: 'Alex could help host a quick internal workshop on Docker best practices!' }
+  ]
+};
+
+// Database Engine
+const DB = {
+  get() {
+    try {
+      const raw = localStorage.getItem('eom_db_v1');
+      if (!raw) {
+        localStorage.setItem('eom_db_v1', JSON.stringify(DEFAULT_DATA));
+        return JSON.parse(JSON.stringify(DEFAULT_DATA));
+      }
+      return JSON.parse(raw);
+    } catch(e) {
+      return JSON.parse(JSON.stringify(DEFAULT_DATA));
+    }
+  },
+  save(data) {
+    try {
+      localStorage.setItem('eom_db_v1', JSON.stringify(data));
+    } catch(e) {
+      console.error('Storage error:', e);
+    }
+  },
+  reset() {
+    localStorage.removeItem('eom_db_v1');
+    return this.get();
+  }
+};
+
+// Serverless-style RPC calls over local database
+const RPC = {
+  pub() {
+    const db = DB.get();
+    const curMonth = getMonthStr();
+    const monthBallots = db.ballots.filter(b => b.month === curMonth);
+    const counts = {};
+    monthBallots.forEach(b => { counts[b.cid] = (counts[b.cid] || 0) + 1; });
+    return {
+      m: curMonth,
+      rev: !!db.rev,
+      total: monthBallots.length,
+      counts: db.rev ? counts : {},
+      emps: db.employees
+    };
+  },
+  chk(p_code) {
+    const db = DB.get();
+    const code = String(p_code || '').trim().toUpperCase();
+    const r = db.codes.find(c => c.code === code);
+    if (!r) throw new Error('Invalid code. Please check with your admin.');
+    return { used: r.used_month === getMonthStr() };
+  },
+  vote(p_code, p_cid) {
+    const db = DB.get();
+    const code = String(p_code || '').trim().toUpperCase();
+    const curMonth = getMonthStr();
+    const r = db.codes.find(c => c.code === code);
+    if (!r) throw new Error('Invalid code');
+    if (r.used_month === curMonth) throw new Error('This code has already voted this month');
+    if (!db.employees.some(e => e.id === p_cid)) throw new Error('Employee not found');
+    
+    // Store ballot anonymously (only month and cid, no voter or code)
+    db.ballots.push({ month: curMonth, cid: p_cid });
+    r.used_month = curMonth;
+    DB.save(db);
+    return true;
+  },
+  fb(p_code, p_eid, p_kind, p_text) {
+    this.chk(p_code);
+    const text = String(p_text || '').trim();
+    if (!text) throw new Error('Please write something');
+    const db = DB.get();
+    db.feedback.push({
+      month: getMonthStr(),
+      eid: p_eid,
+      kind: p_kind === 'suggestion' ? 'suggestion' : 'compliment',
+      text: text.slice(0, 600)
+    });
+    DB.save(db);
+    return true;
+  },
+  adm(p_pin) {
+    const db = DB.get();
+    if (String(p_pin || '').trim() !== String(db.admin_pin)) {
+      throw new Error('Wrong admin PIN. Default is 1234');
+    }
+    const curMonth = getMonthStr();
+    const monthBallots = db.ballots.filter(b => b.month === curMonth);
+    const counts = {};
+    monthBallots.forEach(b => { counts[b.cid] = (counts[b.cid] || 0) + 1; });
+    const usedCodes = db.codes.filter(c => c.used_month === curMonth).length;
+    const fbList = db.feedback.filter(f => f.month === curMonth);
+    return {
+      counts,
+      total: monthBallots.length,
+      codes: db.codes.length,
+      used: usedCodes,
+      allCodes: db.codes.map(c => c.code),
+      fb: fbList
+    };
+  },
+  addEmp(p_pin, p_name, p_role, p_photo) {
+    const db = DB.get();
+    if (String(p_pin || '').trim() !== String(db.admin_pin)) throw new Error('Wrong admin PIN');
+    const name = String(p_name || '').trim();
+    if (!name) throw new Error('Name required');
+    const newEmp = {
+      id: 'e' + Date.now(),
+      name,
+      role: String(p_role || '').trim(),
+      photo: String(p_photo || '').trim().slice(0, 250000),
+      created_at: Date.now()
+    };
+    db.employees.push(newEmp);
+    DB.save(db);
+    return true;
+  },
+  delEmp(p_pin, p_id) {
+    const db = DB.get();
+    if (String(p_pin || '').trim() !== String(db.admin_pin)) throw new Error('Wrong admin PIN');
+    db.employees = db.employees.filter(e => e.id !== p_id);
+    db.ballots = db.ballots.filter(b => b.cid !== p_id);
+    db.feedback = db.feedback.filter(f => f.eid !== p_id);
+    DB.save(db);
+    return true;
+  },
+  setRev(p_pin, p_on) {
+    const db = DB.get();
+    if (String(p_pin || '').trim() !== String(db.admin_pin)) throw new Error('Wrong admin PIN');
+    db.rev = !!p_on;
+    DB.save(db);
+    return true;
+  },
+  mkCodes(p_pin, p_n) {
+    const db = DB.get();
+    if (String(p_pin || '').trim() !== String(db.admin_pin)) throw new Error('Wrong admin PIN');
+    const count = Math.min(Math.max(parseInt(p_n, 10) || 1, 1), 100);
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const generated = [];
+    const existing = new Set(db.codes.map(c => c.code));
+    while (generated.length < count) {
+      let code = '';
+      for (let i = 0; i < 6; i++) {
+        code += chars[Math.floor(Math.random() * chars.length)];
+      }
+      if (!existing.has(code)) {
+        existing.add(code);
+        generated.push(code);
+        db.codes.push({ code, used_month: '' });
+      }
+    }
+    DB.save(db);
+    return generated;
+  },
+  resetDemo(p_pin) {
+    const db = DB.get();
+    if (String(p_pin || '').trim() !== String(db.admin_pin)) throw new Error('Wrong admin PIN');
+    DB.reset();
+    return true;
+  }
+};
+
+const run = async (fn, ...args) => RPC[fn](...args);
+
+// State Variables
+let D = { emps: [], counts: {} },
+    code = ls('c'),
+    used = false,
+    pin = null,
+    A = null,
+    armed = null,
+    newCodes = '';
+
+$('mo').textContent = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }) + ' · Cast your anonymous vote';
+
+// Update WhatsApp share link
+const shareText = encodeURIComponent(`🏆 Vote for Employee of the Month!\nCast your anonymous vote here: ${window.location.href}`);
+$('wa-share').href = `https://api.whatsapp.com/send?text=${shareText}`;
+
+$('wa-share').onclick = (e) => {
+  if (navigator.share) {
+    e.preventDefault();
+    navigator.share({
+      title: 'Employee of the Month Voting',
+      text: 'Vote for your colleague of the month! Anonymous & fast.',
+      url: window.location.href
+    }).catch(() => {
+      window.open(`https://api.whatsapp.com/send?text=${shareText}`, '_blank');
+    });
+  }
+};
+
+const ini = n => n.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+const av = e => e.photo
+  ? `<img class="av" src="${esc(e.photo)}" alt="${esc(e.name)}" title="Tap to zoom">`
+  : `<div class="av">${esc(ini(e.name))}</div>`;
+
+async function load() {
+  try {
+    D = await run('pub');
+  } catch(e) { err(e); }
+
+  if (code) {
+    try {
+      used = (await run('chk', code)).used;
+    } catch(e) {
+      code = '';
+      ls('c', '');
+    }
+  }
+
+  if (pin) {
+    try {
+      A = await run('adm', pin);
+    } catch(e) {
+      pin = null;
+      A = null;
+      err(e);
+    }
+  }
   render();
 }
-function render(){
-  const adminOn=!!(pin&&A),c=adminOn?A.counts:D.counts,show=adminOn||D.rev,total=adminOn?A.total:D.total;
-  $('st').textContent=total+' vote'+(total===1?'':'s')+' cast'+(D.rev?' · results are out':'');
-  // admin panel
-  $('adm').innerHTML=adminOn?`<div class="panel"><h3>Admin panel</h3>
-   <div class="row"><input id="en" placeholder="Employee name"><input id="er" placeholder="Role (optional)"><input id="ep" type="file" accept="image/*"><button id="add">Add employee</button></div>
-   <div class="row" style="margin-top:12px"><input id="nc" type="number" min="1" max="300" value="10" style="max-width:90px"><button id="mk">Generate voting codes</button><span class="note">${A.used} of ${A.codes} codes used this month</span></div>
-   ${newCodes?`<textarea id="ct" readonly>${esc(newCodes)}</textarea><div class="note">Give one code to each staff member (copy this list).</div>`:''}
-   <div class="row" style="margin-top:12px"><button id="rv">${D.rev?'Hide results':'Reveal winner to everyone'}</button><button class="g" id="ex">Exit admin</button></div></div>
-   <div class="panel"><h3>Anonymous feedback (only you see this)</h3>${fbHtml()}</div>`:'';
-  if(adminOn){
-    $('add').onclick=addEmp;$('ex').onclick=()=>{pin=null;A=null;newCodes='';render()};
-    $('mk').onclick=async()=>{try{newCodes=(await run('mkCodes',pin,$('nc').value)).join('\n');await load()}catch(e){err(e)}};
-    $('rv').onclick=async()=>{try{await run('setRev',pin,!D.rev);await load()}catch(e){err(e)}};
+
+function render() {
+  const adminOn = !!(pin && A);
+  const c = adminOn ? A.counts : D.counts;
+  const show = adminOn || D.rev;
+  const total = adminOn ? A.total : D.total;
+
+  $('st').textContent = total + ' vote' + (total === 1 ? '' : 's') + ' cast' + (D.rev ? ' · Results announced 🎉' : ' · Voting active');
+
+  // Admin panel rendering
+  $('adm').innerHTML = adminOn ? `
+    <div class="panel" style="border: 2px solid var(--acc)">
+      <div class="row" style="justify-content:space-between;margin-bottom:12px">
+        <h3 style="margin:0">⚙️ Admin Dashboard</h3>
+        <span class="pill">Logged in (PIN: ${esc(pin)})</span>
+      </div>
+
+      <div class="row" style="margin-bottom:8px">
+        <input id="en" placeholder="Employee full name">
+        <input id="er" placeholder="Role/Department (optional)">
+        <input id="ep" type="file" accept="image/*" style="font-size:13px">
+        <button id="add">Add Employee</button>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <input id="nc" type="number" min="1" max="100" value="5" style="max-width:90px">
+        <button id="mk">Generate Voting Codes</button>
+        <button class="g" id="view-codes">View All Codes</button>
+        <span class="note" style="margin:0">${A.used} of ${A.codes} codes used this month</span>
+      </div>
+
+      ${newCodes ? `
+        <div style="margin-top:10px">
+          <textarea id="ct" readonly style="font-family:monospace">${esc(newCodes)}</textarea>
+          <div class="note">📋 Copy and distribute one code to each staff member.</div>
+        </div>
+      ` : ''}
+
+      <div class="row" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">
+        <button id="rv">${D.rev ? '🔒 Hide Results from Public' : '🎉 Reveal Winner to Everyone'}</button>
+        <button class="g danger" id="reset-btn">Reset to Default Data</button>
+        <button class="g" id="ex">Exit Admin</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>💬 Anonymous Staff Feedback (${A.fb.length} submitted)</h3>
+      ${fbHtml()}
+    </div>
+  ` : '';
+
+  if (adminOn) {
+    $('add').onclick = addEmp;
+    $('ex').onclick = () => { pin = null; A = null; newCodes = ''; render(); };
+    $('mk').onclick = async () => {
+      try {
+        const codes = await run('mkCodes', pin, $('nc').value);
+        newCodes = codes.join('\n');
+        toast(`Generated ${codes.length} new voting codes!`);
+        await load();
+      } catch(e) { err(e); }
+    };
+    $('view-codes').onclick = () => {
+      newCodes = A.allCodes.join('\n');
+      render();
+    };
+    $('rv').onclick = async () => {
+      try {
+        await run('setRev', pin, !D.rev);
+        toast(D.rev ? 'Results hidden' : 'Winner revealed to everyone!');
+        await load();
+      } catch(e) { err(e); }
+    };
+    $('reset-btn').onclick = async () => {
+      if (confirm('Reset all employees, votes, and feedback to demo data?')) {
+        await run('resetDemo', pin);
+        toast('Reset to default demo data');
+        await load();
+      }
+    };
   }
-  const mx=Math.max(0,...D.emps.map(e=>c[e.id]||0)),win=D.rev&&mx>0?D.emps.filter(e=>(c[e.id]||0)===mx):[];
-  $('win').innerHTML=win.length?`<div class="banner"><div>🎉 Employee of the Month 🎉</div><h2>${win.map(w=>esc(w.name)).join(' & ')}</h2><div>${mx} vote${mx>1?'s':''}${win.length>1?' each (tie)':''}</div></div>`:'';
-  let h='';
-  if(!code&&!adminOn)h=`<div class="panel"><h3>Enter your voting code</h3><div class="row"><input id="cd" placeholder="e.g. K7M2QX" autocapitalize="characters"><button id="go">Continue</button></div><div class="note">Your admin gives each staff member one code.</div></div>`;
-  if(!D.emps.length)h+=`<div class="msg">No employees added yet. Please check back soon.</div>`;
-  else{
-    const l=D.rev?[...D.emps].sort((a,b)=>(c[b.id]||0)-(c[a.id]||0)):D.emps;
-    h+='<div class="grid">'+l.map(e=>`<div class="card${win.some(w=>w.id===e.id)?' win':''}">${win.some(w=>w.id===e.id)?'<span class="crown">WINNER</span>':''}${av(e)}<div class="nm">${esc(e.name)}</div><div class="rl">${esc(e.role)}</div>
-     ${show?`<div class="cnt">${c[e.id]||0} <span class="note">votes</span></div>`:''}
-     ${code&&!used&&!D.rev?`<button data-v="${e.id}">${armed===e.id?'Tap again to confirm':'Vote'}</button>`:''}
-     ${code?`<button class="g" data-f="${e.id}">✍️ Compliment or suggestion</button>`:''}
-     ${adminOn?`<button class="g" data-d="${e.id}">${armed==='d'+e.id?'Remove?':'✕ Remove'}</button>`:''}</div>`).join('')+'</div>';
-    if(code&&used&&!D.rev)h+='<p class="msg">✓ Thanks! Your vote is recorded anonymously. The winner will be revealed by the admin.</p>';
+
+  // Calculate winner
+  const mx = Math.max(0, ...D.emps.map(e => c[e.id] || 0));
+  const win = D.rev && mx > 0 ? D.emps.filter(e => (c[e.id] || 0) === mx) : [];
+
+  $('win').innerHTML = win.length ? `
+    <div class="banner">
+      <div>🏆 CONGRATULATIONS 🏆</div>
+      <h2>${win.map(w => esc(w.name)).join(' & ')}</h2>
+      <div class="sub-banner">${mx} vote${mx > 1 ? 's' : ''}${win.length > 1 ? ' each (Tie!)' : ''} · Winner of Employee of the Month!</div>
+    </div>
+  ` : '';
+
+  let h = '';
+
+  // Voting Code Box
+  if (!code && !adminOn) {
+    const db = DB.get();
+    const available = db.codes.filter(c => c.used_month !== getMonthStr()).slice(0, 4);
+    h += `
+      <div class="panel">
+        <h3>🔑 Enter Voting Code</h3>
+        <div class="row">
+          <input id="cd" placeholder="e.g. VOTE01" autocapitalize="characters" style="font-weight:700;letter-spacing:1px">
+          <button id="go">Submit Code</button>
+        </div>
+        <div class="note">Enter the unique code provided to you. Each code can vote once.</div>
+        ${available.length ? `
+          <div style="margin-top:10px">
+            <span style="font-size:0.8rem;color:var(--mute)">Quick test codes (tap to use):</span>
+            <div class="sample-codes">
+              ${available.map(item => `<span class="code-chip" data-chip="${esc(item.code)}">${esc(item.code)}</span>`).join('')}
+            </div>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  } else if (code && !adminOn) {
+    h += `
+      <div class="panel" style="padding:10px 16px;background:var(--acc2);border-color:var(--acc)">
+        <div class="row" style="justify-content:space-between">
+          <span style="font-size:0.9rem;font-weight:700;color:var(--acc)">
+            🔑 Active Code: <code>${esc(code)}</code> ${used ? '(✓ Vote Cast)' : '(Ready to vote)'}
+          </span>
+          <button class="g" id="change-code" style="padding:4px 8px;min-height:30px;font-size:0.8rem">Change Code</button>
+        </div>
+      </div>
+    `;
   }
-  $('app').innerHTML=h;
-  if($('go'))$('go').onclick=async()=>{const v=$('cd').value.trim().toUpperCase();try{used=(await run('chk',v)).used;code=v;ls('c',v);render()}catch(e){err(e)}};
-  document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>doVote(b.dataset.v));
-  document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>openFb(b.dataset.f));
-  document.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>doDel(b.dataset.d));
-  document.querySelectorAll('img.av').forEach(i=>i.onclick=()=>openZoom(i.src,i.alt));
+
+  // Employee List
+  if (!D.emps.length) {
+    h += `<div class="panel" style="text-align:center;padding:32px"><p class="note">No employees added yet. Admin can add candidates in the admin panel.</p></div>`;
+  } else {
+    const list = D.rev ? [...D.emps].sort((a, b) => (c[b.id] || 0) - (c[a.id] || 0)) : D.emps;
+    h += '<div class="grid">' + list.map(e => `
+      <div class="card${win.some(w => w.id === e.id) ? ' win' : ''}">
+        ${win.some(w => w.id === e.id) ? '<span class="crown">🏆 WINNER</span>' : ''}
+        ${av(e)}
+        <div class="nm">${esc(e.name)}</div>
+        <div class="rl">${esc(e.role || 'Team Member')}</div>
+        ${show ? `<div class="cnt">${c[e.id] || 0} <span style="font-size:0.8rem;color:var(--mute);font-weight:600">votes</span></div>` : ''}
+        <div class="card-actions">
+          ${code && !used && !D.rev ? `
+            <button data-v="${e.id}" class="${armed === e.id ? 'btn-confirm' : ''}">
+              ${armed === e.id ? 'Tap again to confirm' : 'Vote for ' + esc(e.name.split(' ')[0])}
+            </button>
+          ` : ''}
+          ${code ? `<button class="g" data-f="${e.id}">✍️ Compliment / Feedback</button>` : ''}
+          ${adminOn ? `<button class="g danger" data-d="${e.id}">${armed === 'd' + e.id ? 'Confirm Remove?' : '✕ Remove'}</button>` : ''}
+        </div>
+      </div>
+    `).join('') + '</div>';
+
+    if (code && used && !D.rev) {
+      h += `<div class="panel" style="text-align:center;margin-top:16px"><p style="margin:0;font-weight:700;color:var(--ok)">✓ Thanks! Your vote was recorded anonymously. The winner will be revealed soon.</p></div>`;
+    }
+  }
+
+  $('app').innerHTML = h;
+
+  // Event handlers
+  if ($('go')) {
+    $('go').onclick = async () => {
+      const v = $('cd').value.trim().toUpperCase();
+      if (!v) return toast('Please enter a voting code');
+      try {
+        used = (await run('chk', v)).used;
+        code = v;
+        ls('c', v);
+        toast(`Code ${v} accepted!`);
+        render();
+      } catch(e) { err(e); }
+    };
+  }
+
+  if ($('change-code')) {
+    $('change-code').onclick = () => {
+      code = '';
+      ls('c', '');
+      render();
+    };
+  }
+
+  document.querySelectorAll('[data-chip]').forEach(chip => {
+    chip.onclick = () => {
+      if ($('cd')) $('cd').value = chip.dataset.chip;
+      if ($('go')) $('go').click();
+    };
+  });
+
+  document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => doVote(b.dataset.v));
+  document.querySelectorAll('[data-f]').forEach(b => b.onclick = () => openFb(b.dataset.f));
+  document.querySelectorAll('[data-d]').forEach(b => b.onclick = () => doDel(b.dataset.d));
+  document.querySelectorAll('img.av').forEach(i => i.onclick = () => openZoom(i.src, i.alt));
 }
-function fbHtml(){
-  if(!A.fb.length)return '<div class="note">No feedback yet this month.</div>';
-  return D.emps.map(e=>{const l=A.fb.filter(f=>f.eid===e.id);return l.length?`<div style="margin-top:10px"><b>${esc(e.name)}</b>${l.map(f=>`<div class="fi ${f.kind[0]}">${f.kind==='compliment'?'👏 Compliment':'💡 Suggestion'}: ${esc(f.text)}</div>`).join('')}</div>`:''}).join('');
+
+function fbHtml() {
+  if (!A.fb.length) return '<div class="note">No feedback submitted yet this month.</div>';
+  return D.emps.map(e => {
+    const list = A.fb.filter(f => f.eid === e.id);
+    return list.length ? `
+      <div style="margin-top:12px;padding:8px 12px;background:var(--card);border-radius:12px;border:1px solid var(--line)">
+        <b>${esc(e.name)}</b>
+        ${list.map(f => `
+          <div class="fi ${f.kind[0]}">
+            ${f.kind === 'compliment' ? '👏 Compliment' : '💡 Suggestion'}: ${esc(f.text)}
+          </div>
+        `).join('')}
+      </div>
+    ` : '';
+  }).join('');
 }
-function arm(k){armed=k;render();setTimeout(()=>{if(armed===k){armed=null;render()}},3000)}
-async function doVote(id){
-  if(armed!==id)return arm(id);armed=null;
-  try{await run('vote',code,id);used=true;toast('Vote recorded. Thank you!');await load()}catch(e){err(e);await load()}
+
+function arm(k) {
+  armed = k;
+  render();
+  setTimeout(() => {
+    if (armed === k) {
+      armed = null;
+      render();
+    }
+  }, 3000);
 }
-async function doDel(id){
-  if(armed!=='d'+id)return arm('d'+id);armed=null;
-  try{await run('delEmp',pin,id);await load()}catch(e){err(e)}
+
+async function doVote(id) {
+  if (armed !== id) return arm(id);
+  armed = null;
+  try {
+    await run('vote', code, id);
+    used = true;
+    toast('🎉 Vote recorded anonymously. Thank you!');
+    await load();
+  } catch(e) {
+    err(e);
+    await load();
+  }
 }
-function shrink(f){return new Promise((ok,no)=>{const r=new FileReader();r.onerror=no;r.onload=()=>{const i=new Image();i.onerror=no;i.onload=()=>{
-  let s=Math.min(420,i.width,i.height),q=.8,u;const cv=document.createElement('canvas');
-  for(let t=0;t<8;t++){cv.width=cv.height=s;const k=Math.min(i.width,i.height);cv.getContext('2d').drawImage(i,(i.width-k)/2,(i.height-k)/2,k,k,0,0,s,s);u=cv.toDataURL('image/jpeg',q);if(u.length<45000)break;q-=.1;s=Math.round(s*.85)}
-  ok(u)};i.src=r.result};r.readAsDataURL(f)})}
-async function addEmp(){
-  const n=$('en').value.trim();if(!n)return toast('Please enter a name.');
-  let p='';try{const f=$('ep').files[0];if(f)p=await shrink(f)}catch(e){return toast('Could not read that photo.')}
-  try{await run('addEmp',pin,n,$('er').value.trim(),p);toast('Employee added');await load()}catch(e){err(e)}
+
+async function doDel(id) {
+  if (armed !== 'd' + id) return arm('d' + id);
+  armed = null;
+  try {
+    await run('delEmp', pin, id);
+    toast('Employee removed');
+    await load();
+  } catch(e) { err(e); }
 }
-function openFb(eid){
-  const e=D.emps.find(x=>x.id===eid);if(!e)return;let kind='compliment';
-  const m=document.createElement('div');m.className='modal';
-  m.innerHTML=`<div class="box"><h3 style="margin:0">Feedback for ${esc(e.name)}</h3><div class="note">Anonymous: your name or code is never saved with this.</div><div class="seg"><button data-k="compliment" class="on">👏 Compliment</button><button data-k="suggestion">💡 Suggestion</button></div><textarea maxlength="600" placeholder="Write your message…"></textarea><div class="row" style="margin-top:10px;justify-content:flex-end"><button class="g" data-c>Cancel</button><button data-s>Send</button></div></div>`;
+
+function shrink(f) {
+  return new Promise((ok, no) => {
+    const r = new FileReader();
+    r.onerror = no;
+    r.onload = () => {
+      const i = new Image();
+      i.onerror = no;
+      i.onload = () => {
+        let s = Math.min(420, i.width, i.height), q = 0.82, u;
+        const cv = document.createElement('canvas');
+        for (let t = 0; t < 8; t++) {
+          cv.width = cv.height = s;
+          const k = Math.min(i.width, i.height);
+          cv.getContext('2d').drawImage(i, (i.width - k) / 2, (i.height - k) / 2, k, k, 0, 0, s, s);
+          u = cv.toDataURL('image/jpeg', q);
+          if (u.length < 50000) break;
+          q -= 0.1;
+          s = Math.round(s * 0.85);
+        }
+        ok(u);
+      };
+      i.src = r.result;
+    };
+    r.readAsDataURL(f);
+  });
+}
+
+async function addEmp() {
+  const n = $('en').value.trim();
+  if (!n) return toast('Please enter an employee name.');
+  let p = '';
+  try {
+    const f = $('ep').files[0];
+    if (f) p = await shrink(f);
+  } catch(e) {
+    return toast('Could not read that photo.');
+  }
+  try {
+    await run('addEmp', pin, n, $('er').value.trim(), p);
+    $('en').value = '';
+    $('er').value = '';
+    $('ep').value = '';
+    toast('Employee added successfully!');
+    await load();
+  } catch(e) { err(e); }
+}
+
+function openFb(eid) {
+  const e = D.emps.find(x => x.id === eid);
+  if (!e) return;
+  let kind = 'compliment';
+  const m = document.createElement('div');
+  m.className = 'modal';
+  m.innerHTML = `
+    <div class="box">
+      <h3 style="margin:0 0 4px">Feedback for ${esc(e.name)}</h3>
+      <div class="note">🔒 100% Anonymous: Your name and code are never saved with this.</div>
+      <div class="seg">
+        <button data-k="compliment" class="on">👏 Compliment</button>
+        <button data-k="suggestion">💡 Suggestion</button>
+      </div>
+      <textarea maxlength="600" placeholder="Write a compliment or constructive suggestion…"></textarea>
+      <div class="row" style="margin-top:12px;justify-content:flex-end">
+        <button class="g" data-c>Cancel</button>
+        <button data-s>Send Anonymously</button>
+      </div>
+    </div>
+  `;
   document.body.appendChild(m);
-  m.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{kind=b.dataset.k;m.querySelectorAll('[data-k]').forEach(x=>x.classList.toggle('on',x===b))});
-  m.querySelector('[data-c]').onclick=()=>m.remove();
-  m.querySelector('[data-s]').onclick=async()=>{const t=m.querySelector('textarea').value.trim();if(!t)return toast('Please write something first.');
-    try{await run('fb',code,eid,kind,t);m.remove();toast('Thank you! Sent anonymously.')}catch(x){err(x)}};
+  m.querySelectorAll('[data-k]').forEach(b => b.onclick = () => {
+    kind = b.dataset.k;
+    m.querySelectorAll('[data-k]').forEach(x => x.classList.toggle('on', x === b));
+  });
+  m.querySelector('[data-c]').onclick = () => m.remove();
+  m.querySelector('[data-s]').onclick = async () => {
+    const t = m.querySelector('textarea').value.trim();
+    if (!t) return toast('Please write something first.');
+    try {
+      await run('fb', code, eid, kind, t);
+      m.remove();
+      toast('Thank you! Sent anonymously to admin.');
+    } catch(x) { err(x); }
+  };
 }
-function openZoom(src,name){
-  let z=1,x=0,y=0,d0=1,z0=1;const pts=new Map(),m=document.createElement('div');m.className='modal';
-  m.innerHTML=`<div style="color:#fff;font-weight:700">${esc(name)}</div><div class="zw"><img class="zi" src="${esc(src)}" alt=""></div><div class="row"><button data-o>− Zoom out</button><button data-i>+ Zoom in</button><button class="g" data-r style="color:#fff">Reset</button><button class="g" data-x style="color:#fff">Close</button></div><div style="color:#ccc;font-size:.8rem">Pinch, scroll or double-tap to zoom · drag to move</div>`;
+
+function openZoom(src, name) {
+  let z = 1, x = 0, y = 0, d0 = 1, z0 = 1;
+  const pts = new Map();
+  const m = document.createElement('div');
+  m.className = 'modal';
+  m.innerHTML = `
+    <div style="color:#fff;font-weight:800;font-size:1.1rem;text-shadow:0 2px 4px rgba(0,0,0,0.5)">${esc(name)}</div>
+    <div class="zw"><img class="zi" src="${esc(src)}" alt=""></div>
+    <div class="row" style="margin-top:4px">
+      <button data-o>− Zoom Out</button>
+      <button data-i>+ Zoom In</button>
+      <button class="g" data-r style="color:#fff;border-color:rgba(255,255,255,0.4)">Reset</button>
+      <button class="g" data-x style="color:#fff;border-color:rgba(255,255,255,0.4)">Close</button>
+    </div>
+    <div style="color:#cbd5e1;font-size:0.8rem">Pinch, double-tap, or scroll to zoom · Drag to pan</div>
+  `;
   document.body.appendChild(m);
-  const img=m.querySelector('.zi'),ap=()=>{img.style.transform=`translate(${x}px,${y}px) scale(${z})`},sz=v=>{z=Math.min(5,Math.max(1,v));if(z===1)x=y=0;ap()};
-  m.querySelector('[data-i]').onclick=()=>sz(z+.5);m.querySelector('[data-o]').onclick=()=>sz(z-.5);m.querySelector('[data-r]').onclick=()=>sz(1);m.querySelector('[data-x]').onclick=()=>m.remove();
-  m.onclick=ev=>{if(ev.target===m)m.remove()};m.querySelector('.zw').onwheel=ev=>{ev.preventDefault();sz(z+(ev.deltaY<0?.3:-.3))};
-  img.ondblclick=()=>sz(z>1?1:2.5);
-  img.onpointerdown=ev=>{img.setPointerCapture(ev.pointerId);pts.set(ev.pointerId,[ev.clientX,ev.clientY]);if(pts.size===2){const[a,b]=[...pts.values()];d0=Math.hypot(a[0]-b[0],a[1]-b[1])||1;z0=z}};
-  img.onpointermove=ev=>{const p=pts.get(ev.pointerId);if(!p)return;pts.set(ev.pointerId,[ev.clientX,ev.clientY]);
-    if(pts.size===2){const[a,b]=[...pts.values()];sz(z0*Math.hypot(a[0]-b[0],a[1]-b[1])/d0)}else if(z>1){x+=ev.clientX-p[0];y+=ev.clientY-p[1];ap()}};
-  img.onpointerup=img.onpointercancel=ev=>pts.delete(ev.pointerId);
+
+  const img = m.querySelector('.zi');
+  const ap = () => { img.style.transform = `translate(${x}px,${y}px) scale(${z})`; };
+  const sz = v => {
+    z = Math.min(5, Math.max(1, v));
+    if (z === 1) { x = 0; y = 0; }
+    ap();
+  };
+
+  m.querySelector('[data-i]').onclick = () => sz(z + 0.5);
+  m.querySelector('[data-o]').onclick = () => sz(z - 0.5);
+  m.querySelector('[data-r]').onclick = () => sz(1);
+  m.querySelector('[data-x]').onclick = () => m.remove();
+  m.onclick = ev => { if (ev.target === m) m.remove(); };
+
+  m.querySelector('.zw').onwheel = ev => {
+    ev.preventDefault();
+    sz(z + (ev.deltaY < 0 ? 0.3 : -0.3));
+  };
+  img.ondblclick = () => sz(z > 1 ? 1 : 2.5);
+
+  img.onpointerdown = ev => {
+    img.setPointerCapture(ev.pointerId);
+    pts.set(ev.pointerId, [ev.clientX, ev.clientY]);
+    if (pts.size === 2) {
+      const [a, b] = [...pts.values()];
+      d0 = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1;
+      z0 = z;
+    }
+  };
+  img.onpointermove = ev => {
+    const p = pts.get(ev.pointerId);
+    if (!p) return;
+    pts.set(ev.pointerId, [ev.clientX, ev.clientY]);
+    if (pts.size === 2) {
+      const [a, b] = [...pts.values()];
+      sz(z0 * Math.hypot(a[0] - b[0], a[1] - b[1]) / d0);
+    } else if (z > 1) {
+      x += ev.clientX - p[0];
+      y += ev.clientY - p[1];
+      ap();
+    }
+  };
+  img.onpointerup = img.onpointercancel = ev => pts.delete(ev.pointerId);
 }
-$('alink').onclick=e=>{e.preventDefault();const m=document.createElement('div');m.className='modal';
-  m.innerHTML='<div class="box"><h3 style="margin:0 0 10px">Admin login</h3><div class="row"><input id="ap" type="password" placeholder="Admin PIN"><button data-s>Open</button><button class="g" data-c>Cancel</button></div></div>';
-  document.body.appendChild(m);m.querySelector('[data-c]').onclick=()=>m.remove();
-  m.querySelector('[data-s]').onclick=async()=>{pin=m.querySelector('#ap').value;try{A=await run('adm',pin);m.remove();render()}catch(x){pin=null;err(x)}}};
+
+$('alink').onclick = e => {
+  e.preventDefault();
+  const m = document.createElement('div');
+  m.className = 'modal';
+  m.innerHTML = `
+    <div class="box">
+      <h3 style="margin:0 0 6px">Admin Login</h3>
+      <div class="note" style="margin-bottom:12px">Default PIN is <b>1234</b></div>
+      <div class="row">
+        <input id="ap" type="password" placeholder="Enter Admin PIN" autofocus>
+        <button data-s>Sign In</button>
+        <button class="g" data-c>Cancel</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(m);
+  m.querySelector('[data-c]').onclick = () => m.remove();
+  m.querySelector('[data-s]').onclick = async () => {
+    pin = m.querySelector('#ap').value;
+    try {
+      A = await run('adm', pin);
+      m.remove();
+      toast('Admin session opened');
+      render();
+    } catch(x) {
+      pin = null;
+      err(x);
+    }
+  };
+};
+
 load();
-</script></body></html>
+</script>
+</body>
+</html>
