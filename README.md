@@ -93,3 +93,4 @@ Follow these steps to deploy and start using the voting system:
   - Vote counts increment in real-time.
   - The anonymous compliment/suggestion is displayed in the admin feedback section.
 - [ ] **Reveal results:** In the Admin panel, tap **Reveal winner to everyone**. The top employee card will be highlighted with a crown banner and vote counts will be publicly visible to all staff.
+

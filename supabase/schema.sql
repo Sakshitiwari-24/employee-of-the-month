@@ -102,3 +102,4 @@ end $$;
 
 -- STEP 1 (important): set your admin PIN here
 insert into settings(key,value) values('admin_pin','CHANGE_ME_PIN') on conflict(key) do update set value=excluded.value;
+
