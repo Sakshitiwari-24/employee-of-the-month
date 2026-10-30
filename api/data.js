@@ -49,7 +49,13 @@ async function getDb() {
   let fetchStatus = 0;
   let fetchError = null;
   try {
-    const res = await fetch(BLOB_URL + '?t=' + Date.now(), { cache: 'no-store' });
+    const res = await fetch(BLOB_URL + '?t=' + Date.now(), {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
+    });
     fetchStatus = res.status;
     if (res.ok) {
       const data = await res.json();
@@ -77,10 +83,14 @@ function getMonthStr() {
 }
 
 export default async function handler(req, res) {
-  // CORS
+  // CORS & Zero-Cache headers so all devices stay in sync
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
