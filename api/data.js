@@ -177,6 +177,9 @@ export default async function handler(req, res) {
         const cleanText = String(text || '').trim();
         if (!cleanText) return res.status(400).json({ error: 'Please write something first' });
 
+        const candidate = db.employees.find(e => e.id === eid);
+        if (!candidate) return res.status(404).json({ error: 'Employee not found' });
+
         const voter = db.employees.find(e => e.id === voter_id);
         db.feedback.push({
           month: curMonth,
@@ -200,10 +203,15 @@ export default async function handler(req, res) {
         const cleanName = String(name || '').trim();
         if (!cleanName) return res.status(400).json({ error: 'Name is required' });
 
+        const existing = db.employees.find(e => e.name.toLowerCase() === cleanName.toLowerCase());
+        if (existing) {
+          return res.status(400).json({ error: `An employee named "${cleanName}" already exists.` });
+        }
+
         const newEmp = {
           id: 'e' + Date.now(),
           name: cleanName,
-          role: String(role || '').trim(),
+          role: String(role || '').trim() || 'Team Member',
           photo: String(photo || '').trim(),
           pin: '1111',
           created_at: Date.now()
