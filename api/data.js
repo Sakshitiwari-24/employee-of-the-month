@@ -62,7 +62,8 @@ async function getDb() {
 async function saveDb(data) {
   await put(BLOB_NAME, JSON.stringify(data, null, 2), {
     access: 'public',
-    addRandomSuffix: false
+    addRandomSuffix: false,
+    cacheControlMaxAge: 0
   });
 }
 
