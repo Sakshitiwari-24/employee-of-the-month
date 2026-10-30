@@ -1529,11 +1529,17 @@ function renderEmployeeGrid(showResults, c) {
           ${av(e)}
           <div class="nm">${esc(e.name)}</div>
           <div class="rl">${esc(e.role || 'Team Member')}</div>
+
+          <!-- PIN Display on each card -->
+          <div class="card-pin-box" style="margin:6px 0 8px;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--acc2);color:var(--acc);padding:4px 12px;border-radius:10px;font-size:0.85rem;font-weight:800;border:1px solid rgba(225,29,72,0.15)">
+            <span>🔑 PIN: <b>${esc(e.pin || '----')}</b></span>
+          </div>
+
           ${showResults ? `
             <div class="cnt">${c[e.id] || 0} <span style="font-size:0.8rem;color:var(--mute);font-weight:600">votes</span></div>
           ` : ''}
 
-          <!-- Two Action Buttons: 1. Vote Button, 2. Feedback Button -->
+          <!-- Card Actions: Vote, Feedback, Reset PIN -->
           <div class="card-actions">
             ${curVoter ? `
               <!-- Logged-in voting buttons -->
@@ -1564,6 +1570,11 @@ function renderEmployeeGrid(showResults, c) {
             <button class="btn-fb" data-f="${e.id}">
               💬 Feedback
             </button>
+
+            <!-- The Reset PIN Button on each card -->
+            <button class="g sm btn-card-reset" data-reset-pin="${e.id}" style="font-size:0.82rem;padding:7px;width:100%;border-radius:10px">
+              🔒 Reset PIN
+            </button>
           </div>
         </div>
       `;
@@ -1580,6 +1591,12 @@ function renderEmployeeGrid(showResults, c) {
     if (ac) ac.scrollIntoView({ behavior: 'smooth' });
   });
   document.querySelectorAll('[data-f]').forEach(b => b.onclick = () => openFb(b.dataset.f));
+  document.querySelectorAll('[data-reset-pin]').forEach(b => {
+    b.onclick = () => {
+      const emp = D.emps.find(x => x.id === b.dataset.resetPin);
+      if (emp) openChangePinModal(emp);
+    };
+  });
   document.querySelectorAll('img.av').forEach(i => i.onclick = () => openZoom(i.src, i.alt));
 }
 
@@ -1665,6 +1682,7 @@ function renderAdminPanel(adminOn) {
                   ${esc(emp.role || 'Staff')} · <span style="background:var(--acc2);color:var(--acc);padding:2px 6px;border-radius:6px;font-weight:800;font-size:0.78rem">PIN: <b>${esc(emp.pin || '----')}</b></span>
                 </div>
               </div>
+              <button class="g sm" data-adm-reset-pin="${emp.id}">🔒 Reset PIN</button>
               <button class="g sm" data-edit="${emp.id}">📷 Edit / Photo</button>
               <button class="g danger sm" data-d="${emp.id}">${armed === 'd' + emp.id ? 'Sure?' : '✕'}</button>
             </div>
@@ -1791,6 +1809,12 @@ function renderAdminPanel(adminOn) {
     bulkImportBtn.onclick = openBulkImportModal;
   }
 
+  admEl.querySelectorAll('[data-adm-reset-pin]').forEach(b => {
+    b.onclick = () => {
+      const emp = A.employees.find(x => x.id === b.dataset.admResetPin);
+      if (emp) openChangePinModal(emp);
+    };
+  });
   admEl.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => openEditEmp(b.dataset.edit));
   admEl.querySelectorAll('[data-d]').forEach(b => b.onclick = () => doDel(b.dataset.d));
 }
@@ -1881,18 +1905,18 @@ async function addEmp() {
   } catch(e) { err(e); }
 }
 
-// Employee Self-Service PIN Reset Modal (for privacy)
+// Employee PIN Reset Modal (for privacy)
 function openChangePinModal(emp) {
   if (!emp) return;
   const m = document.createElement('div');
   m.className = 'modal';
   m.innerHTML = `
     <div class="box">
-      <h3 style="margin:0 0 6px">🔒 Reset Your Secret PIN</h3>
-      <div class="note" style="margin-bottom:14px">Set a private 4-digit PIN for <b>${esc(emp.name)}</b>.</div>
+      <h3 style="margin:0 0 6px">🔒 Reset Secret PIN</h3>
+      <div class="note" style="margin-bottom:14px">Set a private 4-digit PIN for <b>${esc(emp.name)}</b> (${esc(emp.role || 'Staff')}).</div>
 
       <div style="margin-bottom:10px">
-        <label class="note" style="display:block;margin-bottom:4px;font-weight:700">Current PIN:</label>
+        <label class="note" style="display:block;margin-bottom:4px;font-weight:700">Current PIN (or Admin PIN):</label>
         <input id="ch-old-pin" type="password" placeholder="" style="width:100%;padding:10px">
       </div>
 
@@ -1912,13 +1936,13 @@ function openChangePinModal(emp) {
   m.querySelector('#ch-submit').onclick = async () => {
     const oldP = m.querySelector('#ch-old-pin').value.trim();
     const newP = m.querySelector('#ch-new-pin').value.trim();
-    if (!oldP) return toast('Please enter your current PIN');
+    if (!oldP) return toast('Please enter your current PIN (or Admin PIN)');
     if (!newP || newP.length < 4) return toast('New PIN must be at least 4 digits');
     try {
       const updated = await run('changeEmpPin', emp.id, oldP, newP);
-      curVoter = updated;
+      if (curVoter && curVoter.id === emp.id) curVoter = updated;
       m.remove();
-      toast('✓ Your PIN has been updated successfully!');
+      toast(`✓ PIN updated to ${newP} for ${emp.name}!`);
       await load();
     } catch(e) { err(e); }
   };
