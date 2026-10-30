@@ -839,82 +839,70 @@ const DEFAULT_DATA = {
   feedback: []
 };
 
-// Persistent Storage Engine
+// Cloud & Local Storage Engine
+const BLOB_URL = 'https://goqu5eu4jodzu0ws.public.blob.vercel-storage.com/eom-database.json';
+
 const DB = {
   get() {
     try {
       const raw = localStorage.getItem('eom_db_v2');
-      if (!raw) {
-        localStorage.setItem('eom_db_v2', JSON.stringify(DEFAULT_DATA));
-        return JSON.parse(JSON.stringify(DEFAULT_DATA));
-      }
-      return JSON.parse(raw);
-    } catch(e) {
-      return JSON.parse(JSON.stringify(DEFAULT_DATA));
-    }
+      if (raw) return JSON.parse(raw);
+    } catch(e) {}
+    return JSON.parse(JSON.stringify(DEFAULT_DATA));
   },
-  save(data) {
+  saveLocal(data) {
     try {
       localStorage.setItem('eom_db_v2', JSON.stringify(data));
-      return true;
-    } catch(e) {
-      console.warn('Storage quota optimization...', e);
-      try {
-        data.employees.forEach(emp => {
-          if (emp.photo && emp.photo.length > 25000) emp.photo = '';
-        });
-        localStorage.setItem('eom_db_v2', JSON.stringify(data));
-        return true;
-      } catch(e2) {
-        toast('Warning: Browser storage is full.');
-        return false;
-      }
-    }
-  },
-  reset() {
-    localStorage.removeItem('eom_db_v2');
-    return this.get();
+    } catch(e) {}
   }
 };
 
-// Sync roster when shared through WhatsApp hash
-function syncRosterFromUrl() {
-  if (window.location.hash.startsWith('#r=')) {
-    try {
-      const b64 = decodeURIComponent(window.location.hash.slice(3));
-      const json = decodeURIComponent(escape(atob(b64)));
-      const incoming = JSON.parse(json);
-      if (Array.isArray(incoming) && incoming.length > 0) {
-        const db = DB.get();
-        incoming.forEach(inc => {
-          const found = db.employees.find(e => e.id === inc.id || e.name.toLowerCase() === inc.name.toLowerCase());
-          if (!found) {
-            db.employees.push(inc);
-          } else {
-            found.role = inc.role || found.role;
-            if (inc.photo) found.photo = inc.photo;
-          }
-        });
-        DB.save(db);
-      }
-    } catch(e) {}
+// Cloud API Caller
+async function apiCall(action, payload = {}) {
+  try {
+    const res = await fetch('/api/data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, ...payload })
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Request failed');
+    if (json.db) DB.saveLocal(json.db);
+    return json;
+  } catch(err) {
+    console.error('API call error:', err);
+    throw err;
   }
 }
 
-function getShareUrl() {
-  const db = DB.get();
-  const minimalRoster = db.employees.map(e => ({
-    id: e.id,
-    name: e.name,
-    role: e.role,
-    photo: e.photo && e.photo.startsWith('http') ? e.photo : ''
-  }));
+// Fetch latest shared cloud database
+async function fetchCloudDb() {
   try {
-    const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(minimalRoster))));
-    return window.location.origin + window.location.pathname + '#r=' + encodeURIComponent(b64);
+    const res = await fetch('/api/data?t=' + Date.now(), { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && Array.isArray(data.employees)) {
+        DB.saveLocal(data);
+        return data;
+      }
+    }
   } catch(e) {
-    return window.location.href.split('#')[0];
+    try {
+      const resBlob = await fetch(BLOB_URL + '?t=' + Date.now(), { cache: 'no-store' });
+      if (resBlob.ok) {
+        const data = await resBlob.json();
+        if (data && Array.isArray(data.employees)) {
+          DB.saveLocal(data);
+          return data;
+        }
+      }
+    } catch(e2) {}
   }
+  return DB.get();
+}
+
+function getShareUrl() {
+  return window.location.origin + window.location.pathname;
 }
 
 // Compress avatar photos to 150x150 Retina JPEG (~6KB)
@@ -945,12 +933,12 @@ function compressImage(file) {
   });
 }
 
-// RPC Engine
+// Cloud RPC Engine
 const RPC = {
-  pub() {
-    const db = DB.get();
+  async pub() {
+    const db = await fetchCloudDb();
     const curMonth = getMonthStr();
-    const monthBallots = db.ballots.filter(b => b.month === curMonth);
+    const monthBallots = (db.ballots || []).filter(b => b.month === curMonth);
     const counts = {};
     monthBallots.forEach(b => { counts[b.cid] = (counts[b.cid] || 0) + 1; });
     return {
@@ -958,38 +946,17 @@ const RPC = {
       rev: !!db.rev,
       total: monthBallots.length,
       counts: db.rev ? counts : {},
-      emps: db.employees
+      emps: db.employees || []
     };
   },
 
-  empRegister(p_name, p_role, p_photo, p_pin) {
-    const name = String(p_name || '').trim();
-    if (!name) throw new Error('Please enter your full name');
-    const pin = String(p_pin || '').trim();
-    if (!pin) throw new Error('Please create a PIN (e.g. 4 digits)');
-
-    const db = DB.get();
-    const existing = db.employees.find(e => e.name.toLowerCase() === name.toLowerCase());
-    if (existing) {
-      throw new Error(`"${name}" is already registered. Please sign in with your PIN.`);
-    }
-
-    const newEmp = {
-      id: 'e' + Date.now(),
-      name,
-      role: String(p_role || '').trim() || 'Team Member',
-      photo: String(p_photo || '').trim(),
-      pin: pin,
-      created_at: Date.now()
-    };
-
-    db.employees.push(newEmp);
-    DB.save(db);
-    return newEmp;
+  async empRegister(p_name, p_role, p_photo, p_pin) {
+    const res = await apiCall('register', { data: { name: p_name, role: p_role, photo: p_photo, pin: p_pin } });
+    return res.emp;
   },
   
-  empLogin(p_eid, p_pin) {
-    const db = DB.get();
+  async empLogin(p_eid, p_pin) {
+    const db = await fetchCloudDb();
     const emp = db.employees.find(e => e.id === p_eid);
     if (!emp) throw new Error('Employee profile not found');
     const enteredPin = String(p_pin || '').trim();
@@ -998,7 +965,7 @@ const RPC = {
       throw new Error('Wrong PIN for this employee account');
     }
     const curMonth = getMonthStr();
-    const vote = db.ballots.find(b => b.month === curMonth && b.voter_id === emp.id);
+    const vote = (db.ballots || []).find(b => b.month === curMonth && b.voter_id === emp.id);
     return {
       emp,
       hasVoted: !!vote,
@@ -1008,60 +975,23 @@ const RPC = {
     };
   },
 
-  empVote(p_voter_id, p_cid) {
-    const db = DB.get();
-    const curMonth = getMonthStr();
-    const voter = db.employees.find(e => e.id === p_voter_id);
-    if (!voter) throw new Error('Please log in or register first');
-    if (p_voter_id === p_cid) throw new Error('You cannot vote for yourself!');
-    
-    const existing = db.ballots.find(b => b.month === curMonth && b.voter_id === p_voter_id);
-    if (existing) throw new Error('You have already voted this month');
-
-    const candidate = db.employees.find(e => e.id === p_cid);
-    if (!candidate) throw new Error('Candidate not found');
-
-    const d = new Date();
-    const timeStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' +
-                    d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-
-    db.ballots.push({
-      month: curMonth,
-      voter_id: voter.id,
-      voter_name: voter.name,
-      cid: candidate.id,
-      cname: candidate.name,
-      timestamp: timeStr
-    });
-
-    DB.save(db);
-    return { candidateId: candidate.id, candidateName: candidate.name, timeStr };
+  async empVote(p_voter_id, p_cid) {
+    const res = await apiCall('vote', { data: { voter_id: p_voter_id, cid: p_cid } });
+    return res;
   },
 
-  fb(p_voter_id, p_eid, p_kind, p_text) {
-    const text = String(p_text || '').trim();
-    if (!text) throw new Error('Please write something');
-    const db = DB.get();
-    const voter = db.employees.find(e => e.id === p_voter_id);
-    db.feedback.push({
-      month: getMonthStr(),
-      eid: p_eid,
-      voter_name: voter ? voter.name : 'Staff Member',
-      kind: p_kind === 'suggestion' ? 'suggestion' : 'compliment',
-      text: text.slice(0, 600),
-      timestamp: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-    });
-    DB.save(db);
-    return true;
+  async fb(p_voter_id, p_eid, p_kind, p_text) {
+    const res = await apiCall('feedback', { data: { voter_id: p_voter_id, eid: p_eid, kind: p_kind, text: p_text } });
+    return res;
   },
 
-  adm(p_pin) {
-    const db = DB.get();
+  async adm(p_pin) {
+    const db = await fetchCloudDb();
     if (String(p_pin || '').trim() !== String(db.admin_pin)) {
       throw new Error('Wrong admin PIN');
     }
     const curMonth = getMonthStr();
-    const monthBallots = db.ballots.filter(b => b.month === curMonth);
+    const monthBallots = (db.ballots || []).filter(b => b.month === curMonth);
     const counts = {};
     monthBallots.forEach(b => { counts[b.cid] = (counts[b.cid] || 0) + 1; });
     
@@ -1073,98 +1003,53 @@ const RPC = {
       cname: b.cname,
       timestamp: b.timestamp
     }));
-    const pendingList = db.employees.filter(e => !votedIds.has(e.id)).map(e => ({
+    const pendingList = (db.employees || []).filter(e => !votedIds.has(e.id)).map(e => ({
       id: e.id,
       name: e.name,
       role: e.role
     }));
 
-    const fbList = db.feedback.filter(f => f.month === curMonth);
+    const fbList = (db.feedback || []).filter(f => f.month === curMonth);
 
     return {
       adminPin: db.admin_pin,
       counts,
       total: monthBallots.length,
-      employees: db.employees,
+      employees: db.employees || [],
       votedList,
       pendingList,
       fb: fbList
     };
   },
 
-  changeAdminPin(p_old_pin, p_new_pin) {
-    const db = DB.get();
-    if (String(p_old_pin || '').trim() !== String(db.admin_pin)) throw new Error('Wrong current admin PIN');
-    const n = String(p_new_pin || '').trim();
-    if (!n || n.length < 4) throw new Error('New PIN must be at least 4 characters');
-    db.admin_pin = n;
-    DB.save(db);
-    return n;
+  async changeAdminPin(p_old_pin, p_new_pin) {
+    const res = await apiCall('change_pin', { pin: p_old_pin, new_pin: p_new_pin });
+    return res.admin_pin;
   },
 
-  addEmp(p_pin, p_name, p_role, p_photo) {
-    const db = DB.get();
-    if (String(p_pin || '').trim() !== String(db.admin_pin)) throw new Error('Wrong admin PIN');
-    const name = String(p_name || '').trim();
-    if (!name) throw new Error('Employee name is required');
-    const newEmp = {
-      id: 'e' + Date.now(),
-      name,
-      role: String(p_role || '').trim(),
-      photo: String(p_photo || '').trim(),
-      pin: '1111',
-      created_at: Date.now()
-    };
-    db.employees.push(newEmp);
-    DB.save(db);
-    return newEmp;
+  async addEmp(p_pin, p_name, p_role, p_photo) {
+    const res = await apiCall('add_emp', { pin: p_pin, name: p_name, role: p_role, photo: p_photo });
+    return res.emp;
   },
 
-  editEmp(p_pin, p_id, p_name, p_role, p_photo, p_emp_pin) {
-    const db = DB.get();
-    if (String(p_pin || '').trim() !== String(db.admin_pin)) throw new Error('Wrong admin PIN');
-    const emp = db.employees.find(e => e.id === p_id);
-    if (!emp) throw new Error('Employee not found');
-    const name = String(p_name || '').trim();
-    if (!name) throw new Error('Employee name cannot be empty');
-    
-    emp.name = name;
-    emp.role = String(p_role || '').trim();
-    if (p_photo !== undefined) emp.photo = String(p_photo || '').trim();
-    if (p_emp_pin) emp.pin = String(p_emp_pin).trim();
-    
-    db.ballots.forEach(b => {
-      if (b.voter_id === p_id) b.voter_name = name;
-      if (b.cid === p_id) b.cname = name;
-    });
-
-    DB.save(db);
-    return emp;
+  async editEmp(p_pin, p_id, p_name, p_role, p_photo, p_emp_pin) {
+    const res = await apiCall('edit_emp', { pin: p_pin, id: p_id, name: p_name, role: p_role, photo: p_photo, emp_pin: p_emp_pin });
+    return res.emp;
   },
 
-  delEmp(p_pin, p_id) {
-    const db = DB.get();
-    if (String(p_pin || '').trim() !== String(db.admin_pin)) throw new Error('Wrong admin PIN');
-    db.employees = db.employees.filter(e => e.id !== p_id);
-    db.ballots = db.ballots.filter(b => b.cid !== p_id && b.voter_id !== p_id);
-    db.feedback = db.feedback.filter(f => f.eid !== p_id);
-    DB.save(db);
-    return true;
+  async delEmp(p_pin, p_id) {
+    const res = await apiCall('del_emp', { pin: p_pin, id: p_id });
+    return res;
   },
 
-  setRev(p_pin, p_on) {
-    const db = DB.get();
-    if (String(p_pin || '').trim() !== String(db.admin_pin)) throw new Error('Wrong admin PIN');
-    db.rev = !!p_on;
-    DB.save(db);
-    return true;
+  async setRev(p_pin, p_on) {
+    const res = await apiCall('set_rev', { pin: p_pin, rev: p_on });
+    return res.rev;
   },
 
-  resetDemo(p_pin) {
-    const db = DB.get();
-    if (String(p_pin || '').trim() !== String(db.admin_pin)) throw new Error('Wrong admin PIN');
-    DB.reset();
-    return true;
+  async resetDemo(p_pin) {
+    const res = await apiCall('reset', { pin: p_pin });
+    return res;
   }
 };
 
@@ -1178,8 +1063,6 @@ let D = { emps: [], counts: {} },
     A = null,
     armed = null,
     activeAuthTab = 'login'; // 'login' or 'register'
-
-syncRosterFromUrl();
 
 $('mo').textContent = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }) + ' · Employee Voting & Awards';
 
@@ -1217,10 +1100,10 @@ try {
   }
 } catch(e) {}
 
-async function load() {
+async function load(silent = false) {
   try {
     D = await run('pub');
-  } catch(e) { err(e); }
+  } catch(e) { if (!silent) err(e); }
 
   if (curVoter) {
     try {
@@ -1239,12 +1122,12 @@ async function load() {
     } catch(e) {
       pin = null;
       A = null;
-      err(e);
+      if (!silent) err(e);
     }
   }
 
   updateWhatsAppButton();
-  render();
+  render(silent);
 }
 
 function render() {
@@ -1971,8 +1854,8 @@ function openFb(eid) {
 }
 
 // Winner & Results Modal (Accessible to Everyone)
-$('view-winner-btn').onclick = () => {
-  const db = DB.get();
+$('view-winner-btn').onclick = async () => {
+  const db = await fetchCloudDb();
   const curMonth = getMonthStr();
   const monthBallots = db.ballots.filter(b => b.month === curMonth);
   const counts = {};
@@ -2153,6 +2036,18 @@ $('alink').onclick = e => {
     }
   };
 };
+
+// Real-time Cloud Sync: Polling every 4 seconds so all phones/laptops stay automatically in sync
+setInterval(() => {
+  const activeTag = document.activeElement ? document.activeElement.tagName : '';
+  if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
+    load(true);
+  }
+}, 4000);
+
+window.addEventListener('focus', () => {
+  load(true);
+});
 
 // Initial run
 load();

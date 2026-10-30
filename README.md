@@ -38,3 +38,11 @@ A mobile-first, interactive, and verified employee voting system where staff can
      - List of pending voters with a 1-tap **"Copy WhatsApp Reminder"** button.
      - Add employees, edit employee names/roles, upload/replace photos, or reset employee PINs.
      - Change the secret Admin PIN anytime.
+
+---
+
+## ☁️ Real-Time Cross-Device Cloud Sync
+
+- **Centralized Cloud Backend:** Powered by Vercel Serverless Functions (`/api/data`) and **Vercel Blob Storage** (`@vercel/blob`).
+- **Instant Cross-Device Updates:** When any employee registers or votes from their phone, it is saved permanently in the cloud and synced automatically across all colleagues' screens and the Admin portal.
+- **Auto-Sync:** Background polling automatically checks for new registrations and ballots every 4 seconds without interrupting typing or screen navigation.
