@@ -1,7 +1,7 @@
 import { put } from '@vercel/blob';
 
-const BLOB_NAME = 'eom-database.json';
-const BLOB_URL = 'https://goqu5eu4jodzu0ws.public.blob.vercel-storage.com/eom-database.json';
+const BLOB_NAME = 'eom-live-db.json';
+const BLOB_URL = 'https://goqu5eu4jodzu0ws.public.blob.vercel-storage.com/eom-live-db.json';
 
 const DEFAULT_DATA = {
   admin_pin: '1234',
