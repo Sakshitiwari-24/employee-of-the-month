@@ -60,11 +60,12 @@ async function getDb() {
 
 // Helper: persist updated database to Vercel Blob
 async function saveDb(data) {
-  await put(BLOB_NAME, JSON.stringify(data, null, 2), {
+  const blob = await put(BLOB_NAME, JSON.stringify(data, null, 2), {
     access: 'public',
     addRandomSuffix: false,
     cacheControlMaxAge: 0
   });
+  return blob;
 }
 
 function getMonthStr() {
@@ -85,6 +86,9 @@ export default async function handler(req, res) {
   // GET: Return entire cloud database
   if (req.method === 'GET') {
     const db = await getDb();
+    if (req.url && req.url.includes('debug=1')) {
+      return res.status(200).json({ db, blobUrl: BLOB_URL });
+    }
     return res.status(200).json(db);
   }
 
@@ -119,8 +123,8 @@ export default async function handler(req, res) {
         };
 
         db.employees.push(newEmp);
-        await saveDb(db);
-        return res.status(200).json({ ok: true, emp: newEmp, db });
+        const savedBlob = await saveDb(db);
+        return res.status(200).json({ ok: true, emp: newEmp, db, blobUrl: savedBlob?.url });
       }
 
       // 2. Cast Vote
@@ -198,8 +202,8 @@ export default async function handler(req, res) {
         };
 
         db.employees.push(newEmp);
-        await saveDb(db);
-        return res.status(200).json({ ok: true, emp: newEmp, db });
+        const savedBlob = await saveDb(db);
+        return res.status(200).json({ ok: true, emp: newEmp, db, blobUrl: savedBlob?.url });
       }
 
       // 5. Admin Edit Employee
