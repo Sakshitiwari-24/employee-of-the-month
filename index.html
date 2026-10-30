@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>🏆 Employee of the Month — Voting & Verification</title>
+<title>🏆 Employee of the Month — Voting & Recognition</title>
 <!-- Open Graph tags for WhatsApp preview -->
-<meta property="og:title" content="🏆 Employee of the Month — Voting & Verification">
-<meta property="og:description" content="Cast your vote for Employee of the Month and verify employee participation!">
+<meta property="og:title" content="🏆 Employee of the Month — Voting & Recognition">
+<meta property="og:description" content="Cast your vote for Employee of the Month, give compliments, and see the winner!">
 <meta property="og:type" content="website">
 <style>
 :root {
@@ -23,8 +23,9 @@
   --warn: #ca8a04;
   --warn-bg: #fef9c3;
   --wa: #25d366;
-  --wa-hover: #128c7e;
-  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.08);
+  --gold: #f59e0b;
+  --gold-bg: #fef3c7;
+  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 @media (prefers-color-scheme: dark) {
@@ -41,6 +42,8 @@
     --ok-bg: #064e3b;
     --warn: #facc15;
     --warn-bg: #422006;
+    --gold: #fbbf24;
+    --gold-bg: #451a03;
     --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4);
   }
@@ -70,6 +73,8 @@ h1 {
   font-size: 0.85rem;
   margin-top: 2px;
 }
+
+/* Header bar */
 .header-bar {
   display: flex;
   flex-direction: column;
@@ -107,6 +112,8 @@ h1 {
 }
 .pill.ok { background: var(--ok-bg); color: var(--ok); }
 .pill.warn { background: var(--warn-bg); color: var(--warn); }
+.pill.gold { background: var(--gold-bg); color: var(--gold); border: 1px solid var(--gold); }
+
 .btn-wa {
   background: #25d366;
   color: #fff;
@@ -132,6 +139,26 @@ h1 {
   height: 17px;
   fill: currentColor;
 }
+
+.btn-winner-nav {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  border: 0;
+  border-radius: 9999px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
+  transition: transform 0.15s ease;
+}
+.btn-winner-nav:hover {
+  transform: translateY(-1px);
+}
+
 .panel {
   background: var(--card);
   border: 1px solid var(--line);
@@ -172,6 +199,7 @@ textarea {
   min-height: 90px;
   resize: vertical;
 }
+
 button {
   cursor: pointer;
   border: 0;
@@ -216,17 +244,25 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* Tabs for Register / Login */
+/* Auth Gateway Tabs */
+.auth-box {
+  background: var(--card);
+  border: 2px solid var(--acc2);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-lg);
+}
 .auth-tabs {
   display: flex;
   border-bottom: 2px solid var(--line);
-  margin-bottom: 14px;
-  gap: 6px;
+  margin-bottom: 16px;
+  gap: 8px;
 }
 .auth-tab {
-  padding: 8px 16px;
+  padding: 10px 18px;
   font-weight: 700;
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   cursor: pointer;
   background: transparent;
   border: 0;
@@ -241,7 +277,50 @@ button:disabled {
   border-bottom-color: var(--acc);
 }
 
-/* Grid Layout */
+/* Logged-In User Banner */
+.voter-profile-bar {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--ok);
+  border-radius: 18px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+@media (min-width: 640px) {
+  .voter-profile-bar {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+/* Callout instruction banner */
+.instruction-banner {
+  background: linear-gradient(135deg, #fff7ed, #ffedd5);
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+  border-radius: 14px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+@media (prefers-color-scheme: dark) {
+  .instruction-banner {
+    background: #431407;
+    border-color: #7c2d12;
+    color: #fdba74;
+  }
+}
+
+/* Grid Layout for Cards */
 .grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -271,9 +350,9 @@ button:disabled {
   box-shadow: var(--shadow-lg);
 }
 .card.win {
-  border: 2px solid var(--acc);
-  background: linear-gradient(180deg, var(--acc2) 0%, var(--card) 60px);
-  box-shadow: 0 8px 25px rgba(234, 88, 12, 0.2);
+  border: 2px solid var(--gold);
+  background: linear-gradient(180deg, var(--gold-bg) 0%, var(--card) 60px);
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.25);
 }
 .card.is-me {
   border: 2px solid var(--ok);
@@ -333,7 +412,7 @@ img.av { cursor: zoom-in; }
   top: -12px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--acc);
+  background: linear-gradient(135deg, #f59e0b, #d97706);
   color: #fff;
   border-radius: 9999px;
   padding: 3px 12px;
@@ -343,53 +422,130 @@ img.av { cursor: zoom-in; }
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   white-space: nowrap;
 }
+
+/* Card Buttons Container */
 .card-actions {
   width: 100%;
   margin-top: auto;
   display: flex;
   flex-direction: column;
+  gap: 7px;
+}
+
+/* The Distinct Vote Button */
+.btn-vote {
+  width: 100%;
+  padding: 9px 8px;
+  font-size: 0.88rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+  color: #fff;
+  border: 0;
+  border-radius: 10px;
+  box-shadow: 0 3px 6px rgba(234, 88, 12, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 6px;
 }
-.card button {
-  width: 100%;
-  padding: 8px;
-  font-size: 0.85rem;
+.btn-vote:hover:not(:disabled) {
+  background: linear-gradient(135deg, #c2410c 0%, #ea580c 100%);
 }
-.card .g {
-  font-size: 0.78rem;
-  padding: 6px 4px;
-}
-.btn-confirm {
-  background: #ea580c !important;
+.btn-vote.btn-confirm {
+  background: #dc2626 !important;
   animation: pulse 1s infinite alternate;
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
 }
 @keyframes pulse {
   from { transform: scale(1); }
   to { transform: scale(1.03); }
 }
 
-/* Winner Banner */
-.banner {
+/* The Distinct Feedback Button */
+.btn-fb {
+  width: 100%;
+  padding: 7px 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn-fb:hover {
+  background: var(--line);
+}
+
+/* Celebratory Winner Banner */
+.winner-showcase {
   text-align: center;
-  padding: 24px 14px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #ea580c 0%, #f97316 50%, #fb923c 100%);
+  padding: 26px 16px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #ea580c 0%, #f59e0b 50%, #fbbf24 100%);
   color: #fff;
-  margin-bottom: 16px;
-  box-shadow: 0 8px 25px rgba(234, 88, 12, 0.35);
+  margin-bottom: 20px;
+  box-shadow: 0 12px 30px rgba(234, 88, 12, 0.35);
   position: relative;
   overflow: hidden;
 }
-.banner h2 {
-  margin: 6px 0 4px;
-  font-size: 1.8rem;
+.winner-showcase h2 {
+  margin: 8px 0 4px;
+  font-size: 2rem;
+  font-weight: 900;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+.winner-avatar-big {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 10px auto 10px;
+  border: 4px solid #fff;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  color: #ea580c;
+  font-size: 2.5rem;
   font-weight: 900;
 }
-.banner .sub-banner {
-  font-size: 1rem;
+.winner-sub {
+  font-size: 1.05rem;
   opacity: 0.95;
-  font-weight: 600;
+  font-weight: 700;
 }
+
+/* Leaderboard */
+.leaderboard-table {
+  width: 100%;
+  margin-top: 10px;
+  border-collapse: collapse;
+}
+.leaderboard-table td, .leaderboard-table th {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.9rem;
+}
+.leaderboard-table tr:last-child td { border-bottom: 0; }
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-weight: 800;
+  font-size: 0.8rem;
+  background: var(--bg);
+}
+.rank-1 { background: #fef08a; color: #854d0e; }
+.rank-2 { background: #e2e8f0; color: #475569; }
+.rank-3 { background: #fed7aa; color: #9a3412; }
 
 /* Table styles for Admin Audit */
 .table-wrap {
@@ -493,7 +649,7 @@ tr:last-child td { border-bottom: 0; }
   transition: transform 0.05s ease-out;
 }
 
-/* Toast */
+/* Toast notification */
 #toast {
   position: fixed;
   left: 50%;
@@ -501,7 +657,7 @@ tr:last-child td { border-bottom: 0; }
   transform: translateX(-50%) translateY(20px);
   background: #0f172a;
   color: #f8fafc;
-  padding: 10px 18px;
+  padding: 11px 20px;
   border-radius: 9999px;
   z-index: 999;
   opacity: 0;
@@ -509,8 +665,8 @@ tr:last-child td { border-bottom: 0; }
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   max-width: 90vw;
   text-align: center;
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 700;
   box-shadow: 0 10px 15px -3px rgba(0,0,0,0.4);
 }
 #toast.s {
@@ -524,10 +680,10 @@ tr:last-child td { border-bottom: 0; }
   margin: 6px 0 0;
 }
 .footer {
-  margin-top: 32px;
+  margin-top: 36px;
   text-align: center;
   border-top: 1px solid var(--line);
-  padding-top: 16px;
+  padding-top: 18px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -580,7 +736,7 @@ tr:last-child td { border-bottom: 0; }
 </head>
 <body>
 <main>
-  <!-- Header Bar -->
+  <!-- Top Navigation Bar -->
   <div class="header-bar">
     <div>
       <h1>🏆 Employee of the Month</h1>
@@ -588,29 +744,30 @@ tr:last-child td { border-bottom: 0; }
     </div>
     <div class="header-actions">
       <span class="pill" id="st">Loading…</span>
+      <button class="btn-winner-nav" id="view-winner-btn">🏆 Winner & Results</button>
       <a href="#" class="btn-wa" id="wa-share" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24"><path d="M12.031 2C6.495 2 2 6.495 2 12.031c0 1.97.57 3.81 1.558 5.37L2 22l4.757-1.528A9.97 9.97 0 0 0 12.031 22c5.536 0 10.031-4.495 10.031-10.031C22.062 6.495 17.567 2 12.031 2zm5.836 14.198c-.244.686-1.42 1.258-1.954 1.341-.534.084-1.226.118-3.957-.962-3.486-1.38-5.74-4.89-5.914-5.124-.174-.233-1.412-1.879-1.412-3.585 0-1.706.892-2.545 1.21-2.894.318-.35.693-.437.925-.437.233 0 .465.002.668.012.215.01.503-.082.787.6.294.706 1.002 2.44 1.089 2.617.087.177.145.385.029.618-.116.233-.174.378-.348.583-.174.204-.367.456-.525.612-.174.174-.356.363-.153.712.204.35 1.049 1.728 2.25 2.798 1.545 1.378 2.848 1.805 3.254 2.008.407.204.646.175.885-.102.24-.277 1.026-1.196 1.3-1.608.274-.412.547-.344.92-.204.374.14 2.373 1.119 2.78 1.323.407.204.678.305.779.476.102.171.102.991-.142 1.677z"/></svg>
-        Share on WhatsApp
+        Share
       </a>
     </div>
   </div>
 
-  <!-- Employee Login & Registration Section -->
-  <div id="voter-bar"></div>
+  <!-- Winner Banner Container (if revealed) -->
+  <div id="win-banner"></div>
 
-  <!-- Admin Panel Mount Point -->
+  <!-- Step 1: Login / Register Area (When Not Logged In) OR User Header Bar (When Logged In) -->
+  <div id="auth-container"></div>
+
+  <!-- Admin Panel Mount Point (for admin only) -->
   <div id="adm"></div>
 
-  <!-- Winner Banner Mount Point -->
-  <div id="win"></div>
-
-  <!-- Main Content App -->
+  <!-- Step 2: Candidates List & Voting Grid -->
   <div id="app">
     <div style="text-align:center;padding:32px;color:var(--mute)">Loading voting system…</div>
   </div>
 
   <div class="footer">
-    <p class="note">🔒 Verified Participation: Register or log in with your name to vote. Each employee can vote once per month.</p>
+    <p class="note">🔒 Verified Participation: Staff sign in to vote. One vote per employee per month.</p>
     <div>
       <a href="#" id="alink" style="color:var(--mute);font-weight:600;font-size:0.85rem">⚙️ Admin Portal</a>
     </div>
@@ -621,7 +778,7 @@ tr:last-child td { border-bottom: 0; }
 
 <script>
 /* -------------------------------------------------------------
-   Employee of the Month — Self-Registration, Login & Management
+   Employee of the Month — Self-Registration, Login & Voting Flow
 ------------------------------------------------------------- */
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -640,7 +797,7 @@ const getMonthStr = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 };
 
-// Initial Seed Data
+// Initial Roster Data
 const DEFAULT_DATA = {
   admin_pin: '1234',
   rev: false,
@@ -682,7 +839,7 @@ const DEFAULT_DATA = {
   feedback: []
 };
 
-// Storage Engine
+// Persistent Storage Engine
 const DB = {
   get() {
     try {
@@ -701,12 +858,10 @@ const DB = {
       localStorage.setItem('eom_db_v2', JSON.stringify(data));
       return true;
     } catch(e) {
-      console.warn('Storage quota warning, optimizing images...', e);
+      console.warn('Storage quota optimization...', e);
       try {
         data.employees.forEach(emp => {
-          if (emp.photo && emp.photo.length > 25000) {
-            emp.photo = '';
-          }
+          if (emp.photo && emp.photo.length > 25000) emp.photo = '';
         });
         localStorage.setItem('eom_db_v2', JSON.stringify(data));
         return true;
@@ -722,7 +877,7 @@ const DB = {
   }
 };
 
-// Roster syncing via URL hash
+// Sync roster when shared through WhatsApp hash
 function syncRosterFromUrl() {
   if (window.location.hash.startsWith('#r=')) {
     try {
@@ -742,9 +897,7 @@ function syncRosterFromUrl() {
         });
         DB.save(db);
       }
-    } catch(e) {
-      console.warn('Could not sync roster from URL', e);
-    }
+    } catch(e) {}
   }
 }
 
@@ -792,7 +945,7 @@ function compressImage(file) {
   });
 }
 
-// Backend RPC functions
+// RPC Engine
 const RPC = {
   pub() {
     const db = DB.get();
@@ -813,18 +966,18 @@ const RPC = {
     const name = String(p_name || '').trim();
     if (!name) throw new Error('Please enter your full name');
     const pin = String(p_pin || '').trim();
-    if (!pin) throw new Error('Please choose a PIN (e.g. 4 digits) for your account');
+    if (!pin) throw new Error('Please create a PIN (e.g. 4 digits)');
 
     const db = DB.get();
     const existing = db.employees.find(e => e.name.toLowerCase() === name.toLowerCase());
     if (existing) {
-      throw new Error(`An employee named "${name}" is already registered. Please sign in or use a distinct name.`);
+      throw new Error(`"${name}" is already registered. Please sign in with your PIN.`);
     }
 
     const newEmp = {
       id: 'e' + Date.now(),
       name,
-      role: String(p_role || '').trim() || 'Staff Member',
+      role: String(p_role || '').trim() || 'Team Member',
       photo: String(p_photo || '').trim(),
       pin: pin,
       created_at: Date.now()
@@ -838,7 +991,7 @@ const RPC = {
   empLogin(p_eid, p_pin) {
     const db = DB.get();
     const emp = db.employees.find(e => e.id === p_eid);
-    if (!emp) throw new Error('Employee not found');
+    if (!emp) throw new Error('Employee profile not found');
     const enteredPin = String(p_pin || '').trim();
     const targetPin = String(emp.pin || '1111').trim();
     if (enteredPin !== targetPin && enteredPin !== String(db.admin_pin)) {
@@ -849,7 +1002,8 @@ const RPC = {
     return {
       emp,
       hasVoted: !!vote,
-      votedFor: vote ? vote.cname : null,
+      votedForId: vote ? vote.cid : null,
+      votedForName: vote ? vote.cname : null,
       votedTime: vote ? vote.timestamp : null
     };
   },
@@ -881,7 +1035,7 @@ const RPC = {
     });
 
     DB.save(db);
-    return { candidateName: candidate.name, timeStr };
+    return { candidateId: candidate.id, candidateName: candidate.name, timeStr };
   },
 
   fb(p_voter_id, p_eid, p_kind, p_text) {
@@ -976,12 +1130,8 @@ const RPC = {
     
     emp.name = name;
     emp.role = String(p_role || '').trim();
-    if (p_photo !== undefined) {
-      emp.photo = String(p_photo || '').trim();
-    }
-    if (p_emp_pin) {
-      emp.pin = String(p_emp_pin).trim();
-    }
+    if (p_photo !== undefined) emp.photo = String(p_photo || '').trim();
+    if (p_emp_pin) emp.pin = String(p_emp_pin).trim();
     
     db.ballots.forEach(b => {
       if (b.voter_id === p_id) b.voter_name = name;
@@ -1023,27 +1173,26 @@ const run = async (fn, ...args) => RPC[fn](...args);
 // State Variables
 let D = { emps: [], counts: {} },
     curVoter = null,
-    voterState = { hasVoted: false, votedFor: null, votedTime: null },
+    voterState = { hasVoted: false, votedForId: null, votedForName: null, votedTime: null },
     pin = null,
     A = null,
     armed = null,
-    activeAuthTab = 'register'; // 'register' or 'login'
+    activeAuthTab = 'login'; // 'login' or 'register'
 
-// Initial sync from URL hash
 syncRosterFromUrl();
 
-$('mo').textContent = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }) + ' · Company Voting & Verification';
+$('mo').textContent = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }) + ' · Employee Voting & Awards';
 
 function updateWhatsAppButton() {
   const url = getShareUrl();
-  const text = encodeURIComponent(`🏆 Vote for Employee of the Month!\nRegister or sign in to cast your vote here: ${url}`);
+  const text = encodeURIComponent(`🏆 Cast your vote for Employee of the Month!\nClick here to sign in and vote: ${url}`);
   $('wa-share').href = `https://api.whatsapp.com/send?text=${text}`;
   $('wa-share').onclick = (e) => {
     if (navigator.share) {
       e.preventDefault();
       navigator.share({
         title: 'Employee of the Month Voting',
-        text: 'Vote for your colleague of the month! Register & vote now.',
+        text: 'Vote for your colleague of the month! Sign in & cast your vote.',
         url: url
       }).catch(() => {
         window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
@@ -1058,7 +1207,7 @@ const av = e => e.photo
   ? `<img class="av" src="${esc(e.photo)}" alt="${esc(e.name)}" title="Tap to zoom">`
   : `<div class="av">${esc(ini(e.name))}</div>`;
 
-// Restore session from localStorage if present
+// Restore saved user session if exists
 try {
   const savedVoterId = localStorage.getItem('eom_voter_id');
   if (savedVoterId) {
@@ -1101,179 +1250,199 @@ async function load() {
 function render() {
   const adminOn = !!(pin && A);
   const c = adminOn ? A.counts : D.counts;
-  const show = adminOn || D.rev;
+  const showResults = adminOn || D.rev;
   const total = adminOn ? A.total : D.total;
 
-  $('st').textContent = total + ' vote' + (total === 1 ? '' : 's') + ' cast' + (D.rev ? ' · Results announced 🎉' : ' · Voting active');
+  $('st').textContent = total + ' vote' + (total === 1 ? '' : 's') + ' cast' + (D.rev ? ' · Winner Announced 🎉' : ' · Voting Active');
 
-  renderVoterBar();
+  // 1. Render Winner Showcase if results are announced
+  renderWinnerSection(showResults, c);
+
+  // 2. Render Step 1: Login / Register OR Logged-In Profile Bar
+  renderAuthOrProfile();
+
+  // 3. Render Admin Panel if logged in as admin
   renderAdminPanel(adminOn);
 
-  // Winner banner
-  const mx = Math.max(0, ...D.emps.map(e => c[e.id] || 0));
-  const win = D.rev && mx > 0 ? D.emps.filter(e => (c[e.id] || 0) === mx) : [];
-
-  $('win').innerHTML = win.length ? `
-    <div class="banner">
-      <div>🏆 CONGRATULATIONS 🏆</div>
-      <h2>${win.map(w => esc(w.name)).join(' & ')}</h2>
-      <div class="sub-banner">${mx} vote${mx > 1 ? 's' : ''}${win.length > 1 ? ' each (Tie!)' : ''} · Winner of Employee of the Month!</div>
-    </div>
-  ` : '';
-
-  // Employee voting cards
-  let h = '';
-  if (!D.emps.length) {
-    h = `<div class="panel" style="text-align:center;padding:32px"><p class="note">No employees registered yet. Use the registration form above to be the first to join!</p></div>`;
-  } else {
-    const list = D.rev ? [...D.emps].sort((a, b) => (c[b.id] || 0) - (c[a.id] || 0)) : D.emps;
-    h = '<div class="grid">' + list.map(e => {
-      const isMe = curVoter && curVoter.id === e.id;
-      const isWinner = win.some(w => w.id === e.id);
-      return `
-        <div class="card${isWinner ? ' win' : ''}${isMe ? ' is-me' : ''}">
-          ${isWinner ? '<span class="crown">🏆 WINNER</span>' : ''}
-          ${isMe ? '<span class="badge-me">YOU</span>' : ''}
-          ${av(e)}
-          <div class="nm">${esc(e.name)}</div>
-          <div class="rl">${esc(e.role || 'Team Member')}</div>
-          ${show ? `<div class="cnt">${c[e.id] || 0} <span style="font-size:0.8rem;color:var(--mute);font-weight:600">votes</span></div>` : ''}
-          <div class="card-actions">
-            ${curVoter && !voterState.hasVoted && !D.rev ? `
-              ${isMe ? `
-                <button class="g" disabled style="opacity:0.6;font-size:0.8rem">✕ Cannot vote for yourself</button>
-              ` : `
-                <button data-v="${e.id}" class="${armed === e.id ? 'btn-confirm' : ''}">
-                  ${armed === e.id ? 'Tap again to confirm' : 'Vote for ' + esc(e.name.split(' ')[0])}
-                </button>
-              `}
-            ` : ''}
-            
-            ${!curVoter && !D.rev ? `
-              <button class="g" data-need-login="${e.id}" style="font-size:0.8rem">Login to Vote</button>
-            ` : ''}
-
-            <button class="g" data-f="${e.id}">✍️ Compliment / Feedback</button>
-
-            ${adminOn ? `
-              <div class="row" style="margin-top:4px">
-                <button class="g sm" data-edit="${e.id}" style="flex:1">✏️ Edit</button>
-                <button class="g danger sm" data-d="${e.id}">${armed === 'd' + e.id ? 'Sure?' : '✕ Remove'}</button>
-              </div>
-            ` : ''}
-          </div>
-        </div>
-      `;
-    }).join('') + '</div>';
-
-    if (curVoter && voterState.hasVoted && !D.rev) {
-      h += `
-        <div class="panel" style="text-align:center;margin-top:16px;background:var(--ok-bg);border-color:var(--ok)">
-          <p style="margin:0;font-weight:700;color:var(--ok)">
-            ✓ Thank you, ${esc(curVoter.name)}! You voted for <b>${esc(voterState.votedFor)}</b> on ${esc(voterState.votedTime)}.
-          </p>
-        </div>
-      `;
-    }
-  }
-
-  $('app').innerHTML = h;
-
-  // Listeners
-  document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => doVote(b.dataset.v));
-  document.querySelectorAll('[data-need-login]').forEach(b => b.onclick = () => {
-    toast('Please register or sign in above to cast your vote');
-    const vb = $('voter-bar');
-    if (vb) { vb.scrollIntoView({ behavior: 'smooth' }); }
-  });
-  document.querySelectorAll('[data-f]').forEach(b => b.onclick = () => openFb(b.dataset.f));
-  document.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => openEditEmp(b.dataset.edit));
-  document.querySelectorAll('[data-d]').forEach(b => b.onclick = () => doDel(b.dataset.d));
-  document.querySelectorAll('img.av').forEach(i => i.onclick = () => openZoom(i.src, i.alt));
+  // 4. Render Step 2: Employee List with Vote & Feedback Buttons
+  renderEmployeeGrid(showResults, c);
 }
 
-// Render Employee Login & Registration Area
-function renderVoterBar() {
-  const vb = $('voter-bar');
-  if (curVoter) {
-    vb.innerHTML = `
-      <div class="panel" style="border-left: 5px solid var(--ok); background: var(--card)">
-        <div class="row" style="justify-content:space-between">
-          <div>
-            <div style="font-weight:800;font-size:1.05rem">
-              👤 Logged In: <span style="color:var(--acc)">${esc(curVoter.name)}</span>
-              <span class="note" style="margin-left:6px">(${esc(curVoter.role || 'Staff')})</span>
-            </div>
-            <div style="margin-top:4px">
-              ${voterState.hasVoted ? `
-                <span class="pill ok">✓ Voted for ${esc(voterState.votedFor)} (${esc(voterState.votedTime)})</span>
-              ` : `
-                <span class="pill warn">⏳ You have NOT voted yet — choose a colleague below!</span>
-              `}
-            </div>
-          </div>
-          <button class="g sm" id="voter-logout" style="margin-left:auto">Log Out / Switch User</button>
-        </div>
+// 1. Winner Showcase Render
+function renderWinnerSection(showResults, c) {
+  const wb = $('win-banner');
+  if (!showResults) {
+    wb.innerHTML = '';
+    return;
+  }
+
+  const mx = Math.max(0, ...D.emps.map(e => c[e.id] || 0));
+  const winners = mx > 0 ? D.emps.filter(e => (c[e.id] || 0) === mx) : [];
+
+  if (!winners.length) {
+    wb.innerHTML = `
+      <div class="panel" style="text-align:center;background:var(--gold-bg);border-color:var(--gold)">
+        <h3 style="margin:0;color:var(--gold)">🏆 Results Announced</h3>
+        <p class="note" style="margin:4px 0 0">Voting has concluded for this month. No votes were recorded.</p>
       </div>
     `;
+    return;
+  }
+
+  wb.innerHTML = `
+    <div class="winner-showcase">
+      <div style="font-size:0.9rem;font-weight:800;letter-spacing:1px;text-transform:uppercase">
+        ✨ Official Winner Announced ✨
+      </div>
+      <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap">
+        ${winners.map(w => `
+          <div>
+            ${w.photo ? `
+              <img class="winner-avatar-big" src="${esc(w.photo)}" alt="">
+            ` : `
+              <div class="winner-avatar-big">${esc(ini(w.name))}</div>
+            `}
+            <h2>${esc(w.name)}</h2>
+            <div class="winner-sub">${esc(w.role || 'Winner')}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div style="margin-top:12px;font-size:1.15rem;font-weight:900;background:rgba(0,0,0,0.2);display:inline-block;padding:6px 18px;border-radius:9999px">
+        🎉 ${mx} Vote${mx > 1 ? 's' : ''}${winners.length > 1 ? ' each (Tie!)' : ''} Won!
+      </div>
+    </div>
+  `;
+}
+
+// 2. Step 1: Login / Register OR Logged-In Bar
+function renderAuthOrProfile() {
+  const ac = $('auth-container');
+  if (curVoter) {
+    // User is logged in
+    ac.innerHTML = `
+      <div class="voter-profile-bar">
+        <div>
+          <div style="font-weight:800;font-size:1.05rem">
+            👤 Logged in as: <span style="color:var(--acc)">${esc(curVoter.name)}</span>
+            <span class="note" style="margin-left:6px">(${esc(curVoter.role || 'Staff')})</span>
+          </div>
+          <div style="margin-top:4px">
+            ${voterState.hasVoted ? `
+              <span class="pill ok">✓ You voted for ${esc(voterState.votedForName)} (${esc(voterState.votedTime)})</span>
+            ` : `
+              <span class="pill warn">⏳ Vote Pending — Cast your vote below!</span>
+            `}
+          </div>
+        </div>
+        <div class="row">
+          <button class="g sm" id="voter-logout">Log Out / Switch User</button>
+        </div>
+      </div>
+
+      ${!voterState.hasVoted && !D.rev ? `
+        <div class="instruction-banner">
+          <span>📢</span>
+          <div>
+            <b>Welcome, ${esc(curVoter.name)}!</b> Select a colleague below and tap the bright orange <b>"🗳️ Vote"</b> button to cast your vote!
+          </div>
+        </div>
+      ` : ''}
+    `;
+
     $('voter-logout').onclick = () => {
       curVoter = null;
-      voterState = { hasVoted: false, votedFor: null, votedTime: null };
+      voterState = { hasVoted: false, votedForId: null, votedForName: null, votedTime: null };
       localStorage.removeItem('eom_voter_id');
-      toast('Logged out');
+      toast('Logged out successfully');
       render();
     };
   } else {
-    vb.innerHTML = `
-      <div class="panel">
-        <div class="auth-tabs">
-          <button class="auth-tab ${activeAuthTab === 'register' ? 'active' : ''}" id="tab-reg">✨ New Employee? Register Here</button>
-          <button class="auth-tab ${activeAuthTab === 'login' ? 'active' : ''}" id="tab-login">🔑 Existing Employee Sign In</button>
+    // User is NOT logged in: Show the clean Login / Register gateway
+    ac.innerHTML = `
+      <div class="auth-box">
+        <div style="text-align:center;margin-bottom:14px">
+          <h2 style="margin:0 0 4px;font-size:1.35rem;font-weight:900">🗳️ Employee Access & Voting</h2>
+          <div class="note">Please sign in or register to view candidates and cast your vote.</div>
         </div>
 
-        ${activeAuthTab === 'register' ? `
-          <!-- Self-Registration Form -->
+        <div class="auth-tabs">
+          <button class="auth-tab ${activeAuthTab === 'login' ? 'active' : ''}" id="tab-login">
+            🔑 Sign In (Existing Staff)
+          </button>
+          <button class="auth-tab ${activeAuthTab === 'register' ? 'active' : ''}" id="tab-reg">
+            ✨ Register (New Employee)
+          </button>
+        </div>
+
+        ${activeAuthTab === 'login' ? `
+          <!-- Existing Employee Login -->
           <div>
-            <p class="note" style="margin-top:0;margin-bottom:12px">
-              Join the voting contest! Fill in your details below to register yourself and cast your vote.
-            </p>
-            <div class="row" style="margin-bottom:10px">
-              <input id="reg-name" placeholder="Your Full Name (e.g. Alex Morgan)" required>
-              <input id="reg-role" placeholder="Your Role / Department (e.g. Marketing)">
-            </div>
-            <div class="row" style="margin-bottom:10px">
-              <div style="flex:1;min-width:140px">
-                <span class="note" style="display:block;margin-bottom:4px">Your Photo (optional):</span>
-                <input id="reg-photo-file" type="file" accept="image/*" style="font-size:12px;padding:6px">
-              </div>
-              <div style="flex:1;min-width:140px">
-                <span class="note" style="display:block;margin-bottom:4px">Create a PIN (to log in later):</span>
-                <input id="reg-pin" type="password" placeholder="Create your 4-digit PIN" maxlength="12" style="font-weight:700">
-              </div>
-            </div>
-            <button id="reg-submit-btn" style="width:100%;margin-top:4px">Register & Proceed to Vote</button>
-          </div>
-        ` : `
-          <!-- Existing Employee Login Form -->
-          <div>
-            <p class="note" style="margin-top:0;margin-bottom:12px">
-              Welcome back! Select your name and enter your secret PIN to vote.
-            </p>
-            <div class="row">
-              <select id="voter-select">
-                <option value="">-- Select Your Registered Name --</option>
+            <div style="margin-bottom:10px">
+              <label class="note" style="display:block;margin-bottom:4px;font-weight:700">1. Select Your Name:</label>
+              <select id="voter-select" style="width:100%;font-size:16px;padding:12px">
+                <option value="">-- Choose Your Name from Roster --</option>
                 ${D.emps.map(e => `<option value="${e.id}">${esc(e.name)} (${esc(e.role || 'Staff')})</option>`).join('')}
               </select>
-              <input id="voter-pin" type="password" placeholder="Enter Your PIN" style="max-width:150px">
-              <button id="voter-login-btn">Sign In to Vote</button>
             </div>
+            <div style="margin-bottom:14px">
+              <label class="note" style="display:block;margin-bottom:4px;font-weight:700">2. Enter Your 4-Digit PIN:</label>
+              <input id="voter-pin" type="password" placeholder="Enter your secret PIN" style="width:100%;font-size:16px;padding:12px">
+              <div class="note">Default PIN for preloaded staff is <b>1111</b>.</div>
+            </div>
+            <button id="voter-login-btn" style="width:100%;font-size:1rem;min-height:46px">
+              👉 Sign In & Cast Vote
+            </button>
+          </div>
+        ` : `
+          <!-- New Employee Registration -->
+          <div>
+            <div class="row" style="margin-bottom:10px">
+              <div style="flex:1;min-width:140px">
+                <label class="note" style="display:block;margin-bottom:4px;font-weight:700">Your Full Name (required):</label>
+                <input id="reg-name" placeholder="e.g. Alex Morgan" style="width:100%;padding:10px">
+              </div>
+              <div style="flex:1;min-width:140px">
+                <label class="note" style="display:block;margin-bottom:4px;font-weight:700">Role / Department:</label>
+                <input id="reg-role" placeholder="e.g. Operations Manager" style="width:100%;padding:10px">
+              </div>
+            </div>
+            <div class="row" style="margin-bottom:14px">
+              <div style="flex:1;min-width:140px">
+                <label class="note" style="display:block;margin-bottom:4px;font-weight:700">Photo (camera/gallery):</label>
+                <input id="reg-photo-file" type="file" accept="image/*" style="width:100%;font-size:12px;padding:6px">
+              </div>
+              <div style="flex:1;min-width:140px">
+                <label class="note" style="display:block;margin-bottom:4px;font-weight:700">Create a 4-Digit PIN:</label>
+                <input id="reg-pin" type="password" placeholder="e.g. 1234" maxlength="12" style="width:100%;padding:10px;font-weight:700">
+              </div>
+            </div>
+            <button id="reg-submit-btn" style="width:100%;font-size:1rem;min-height:46px">
+              ✨ Register & Start Voting
+            </button>
           </div>
         `}
       </div>
     `;
 
-    $('tab-reg').onclick = () => { activeAuthTab = 'register'; render(); };
     $('tab-login').onclick = () => { activeAuthTab = 'login'; render(); };
+    $('tab-reg').onclick = () => { activeAuthTab = 'register'; render(); };
+
+    if ($('voter-login-btn')) {
+      $('voter-login-btn').onclick = async () => {
+        const eid = $('voter-select').value;
+        if (!eid) return toast('Please select your name from the dropdown');
+        const p = $('voter-pin').value.trim();
+        if (!p) return toast('Please enter your PIN');
+        try {
+          const res = await run('empLogin', eid, p);
+          curVoter = res.emp;
+          voterState = res;
+          localStorage.setItem('eom_voter_id', curVoter.id);
+          toast(`✓ Welcome, ${curVoter.name}!`);
+          render();
+        } catch(e) { err(e); }
+      };
+    }
 
     if ($('reg-submit-btn')) {
       $('reg-submit-btn').onclick = async () => {
@@ -1294,34 +1463,102 @@ function renderVoterBar() {
         try {
           const newEmp = await run('empRegister', name, role, photoBase64, pinVal);
           curVoter = newEmp;
-          voterState = { hasVoted: false, votedFor: null, votedTime: null };
+          voterState = { hasVoted: false, votedForId: null, votedForName: null, votedTime: null };
           localStorage.setItem('eom_voter_id', newEmp.id);
-          toast(`🎉 Welcome, ${newEmp.name}! Your profile is ready. Cast your vote below!`);
+          toast(`🎉 Welcome, ${newEmp.name}! You are registered. Please vote below!`);
           await load();
-        } catch(e) { err(e); }
-      };
-    }
-
-    if ($('voter-login-btn')) {
-      $('voter-login-btn').onclick = async () => {
-        const eid = $('voter-select').value;
-        if (!eid) return toast('Please select your name from the list');
-        const p = $('voter-pin').value.trim();
-        if (!p) return toast('Please enter your PIN');
-        try {
-          const res = await run('empLogin', eid, p);
-          curVoter = res.emp;
-          voterState = res;
-          localStorage.setItem('eom_voter_id', curVoter.id);
-          toast(`Welcome, ${curVoter.name}!`);
-          render();
         } catch(e) { err(e); }
       };
     }
   }
 }
 
-// Render Admin Panel
+// 3. Step 2: Employee Grid with Vote & Feedback Buttons
+function renderEmployeeGrid(showResults, c) {
+  const mx = Math.max(0, ...D.emps.map(e => c[e.id] || 0));
+  const winners = showResults && mx > 0 ? D.emps.filter(e => (c[e.id] || 0) === mx) : [];
+
+  let h = '';
+  if (!D.emps.length) {
+    h = `<div class="panel" style="text-align:center;padding:32px"><p class="note">No employees registered yet.</p></div>`;
+  } else {
+    // Header title for candidate section
+    h += `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3 style="margin:0;font-size:1.15rem;font-weight:800">👥 Nominated Candidates (${D.emps.length})</h3>
+        <span class="note">${curVoter ? 'Vote for one colleague' : 'Sign in above to vote'}</span>
+      </div>
+    `;
+
+    const list = showResults ? [...D.emps].sort((a, b) => (c[b.id] || 0) - (c[a.id] || 0)) : D.emps;
+
+    h += '<div class="grid">' + list.map(e => {
+      const isMe = curVoter && curVoter.id === e.id;
+      const isWinner = winners.some(w => w.id === e.id);
+      const isVotedForThis = voterState.hasVoted && voterState.votedForId === e.id;
+
+      return `
+        <div class="card${isWinner ? ' win' : ''}${isMe ? ' is-me' : ''}">
+          ${isWinner ? '<span class="crown">👑 WINNER</span>' : ''}
+          ${isMe ? '<span class="badge-me">YOU</span>' : ''}
+          ${av(e)}
+          <div class="nm">${esc(e.name)}</div>
+          <div class="rl">${esc(e.role || 'Team Member')}</div>
+          ${showResults ? `
+            <div class="cnt">${c[e.id] || 0} <span style="font-size:0.8rem;color:var(--mute);font-weight:600">votes</span></div>
+          ` : ''}
+
+          <!-- Two Action Buttons: 1. Vote Button, 2. Feedback Button -->
+          <div class="card-actions">
+            ${curVoter ? `
+              <!-- Logged-in voting buttons -->
+              ${isMe ? `
+                <button class="g" disabled style="opacity:0.6;font-size:0.8rem;padding:8px">✕ Cannot vote for yourself</button>
+              ` : voterState.hasVoted ? `
+                ${isVotedForThis ? `
+                  <button class="pill ok" style="width:100%;justify-content:center;padding:9px;font-size:0.85rem">✓ Your Vote</button>
+                ` : `
+                  <button class="g" disabled style="opacity:0.4;font-size:0.8rem;padding:8px">Vote Locked</button>
+                `}
+              ` : D.rev ? `
+                <button class="g" disabled style="opacity:0.5;font-size:0.8rem">Voting Closed</button>
+              ` : `
+                <!-- The Primary Vote Button -->
+                <button class="btn-vote ${armed === e.id ? 'btn-confirm' : ''}" data-v="${e.id}">
+                  ${armed === e.id ? '⚠️ Tap again to confirm!' : '🗳️ Vote for ' + esc(e.name.split(' ')[0])}
+                </button>
+              `}
+            ` : `
+              <!-- Non logged-in button prompts user to sign in -->
+              <button class="btn-vote" data-need-auth="${e.id}">
+                🗳️ Vote for ${esc(e.name.split(' ')[0])}
+              </button>
+            `}
+
+            <!-- The Feedback Button -->
+            <button class="btn-fb" data-f="${e.id}">
+              💬 Feedback
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('') + '</div>';
+  }
+
+  $('app').innerHTML = h;
+
+  // Listeners
+  document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => doVote(b.dataset.v));
+  document.querySelectorAll('[data-need-auth]').forEach(b => b.onclick = () => {
+    toast('Please sign in or register above to vote for this colleague!');
+    const ac = $('auth-container');
+    if (ac) ac.scrollIntoView({ behavior: 'smooth' });
+  });
+  document.querySelectorAll('[data-f]').forEach(b => b.onclick = () => openFb(b.dataset.f));
+  document.querySelectorAll('img.av').forEach(i => i.onclick = () => openZoom(i.src, i.alt));
+}
+
+// 4. Admin Panel Render
 function renderAdminPanel(adminOn) {
   const admEl = $('adm');
   if (!adminOn) {
@@ -1332,14 +1569,13 @@ function renderAdminPanel(adminOn) {
   const turnoutPct = A.employees.length ? Math.round((A.votedList.length / A.employees.length) * 100) : 0;
 
   admEl.innerHTML = `
-    <!-- Main Admin Controls -->
     <div class="panel" style="border: 2px solid var(--acc)">
       <div class="row" style="justify-content:space-between;margin-bottom:12px">
-        <h3 style="margin:0">⚙️ Admin Dashboard & Audit</h3>
+        <h3 style="margin:0">⚙️ Admin Dashboard & Live Audit</h3>
         <button class="g sm" id="adm-change-pin-btn">🔒 Change Admin PIN</button>
       </div>
 
-      <!-- Add New Employee Form -->
+      <!-- Add Employee Directly -->
       <div style="background:var(--bg);padding:14px;border-radius:14px;margin-bottom:16px;border:1px solid var(--line)">
         <h4 style="margin:0 0 10px;font-size:0.95rem">➕ Add Employee Directly</h4>
         <div class="row" style="margin-bottom:8px">
@@ -1359,7 +1595,7 @@ function renderAdminPanel(adminOn) {
       <div class="row" style="gap:10px;margin-bottom:16px">
         <div class="panel" style="flex:1;min-width:130px;padding:12px;text-align:center;margin:0;background:var(--bg)">
           <div style="font-size:1.5rem;font-weight:900;color:var(--ink)">${A.employees.length}</div>
-          <div class="note" style="margin:0">Total Employees</div>
+          <div class="note" style="margin:0">Total Staff</div>
         </div>
         <div class="panel" style="flex:1;min-width:130px;padding:12px;text-align:center;margin:0;background:var(--ok-bg)">
           <div style="font-size:1.5rem;font-weight:900;color:var(--ok)">${A.votedList.length}</div>
@@ -1375,9 +1611,9 @@ function renderAdminPanel(adminOn) {
         </div>
       </div>
 
-      <!-- Roster Management Section -->
+      <!-- Roster Management -->
       <div style="margin-bottom:18px">
-        <h4 style="margin:0 0 8px;font-size:0.95rem">👥 Manage Registered Employees (${A.employees.length})</h4>
+        <h4 style="margin:0 0 8px;font-size:0.95rem">👥 Manage Employees (${A.employees.length})</h4>
         <div style="max-height: 280px; overflow-y: auto; padding-right: 4px;">
           ${A.employees.map(emp => `
             <div class="emp-manage-item">
@@ -1397,7 +1633,7 @@ function renderAdminPanel(adminOn) {
         </div>
       </div>
 
-      <!-- Voting Verification Audit Table -->
+      <!-- Who Voted For Whom Table -->
       <div style="margin-bottom:18px">
         <h4 style="margin:0 0 6px;font-size:0.95rem">🗳️ Who Has Voted For Whom (${A.votedList.length})</h4>
         ${A.votedList.length ? `
@@ -1426,7 +1662,7 @@ function renderAdminPanel(adminOn) {
         `}
       </div>
 
-      <!-- Pending Voters List -->
+      <!-- Pending Voters -->
       ${A.pendingList.length ? `
         <div style="margin-bottom:18px;background:var(--warn-bg);padding:12px;border-radius:12px">
           <div class="row" style="justify-content:space-between;margin-bottom:6px">
@@ -1438,18 +1674,18 @@ function renderAdminPanel(adminOn) {
           </div>
         </div>
       ` : `
-        <div class="pill ok" style="margin-bottom:14px">🎉 100% Turnout! All registered employees have voted.</div>
+        <div class="pill ok" style="margin-bottom:14px">🎉 100% Turnout! All registered staff have voted.</div>
       `}
 
-      <!-- Bottom Controls -->
+      <!-- Actions -->
       <div class="row" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">
-        <button id="rv">${D.rev ? '🔒 Hide Results from Public' : '🎉 Reveal Winner to Everyone'}</button>
+        <button id="rv">${D.rev ? '🔒 Hide Winner & Results' : '🎉 Reveal Winner to Everyone'}</button>
         <button class="g danger" id="reset-btn">Reset to Default Data</button>
         <button class="g" id="ex">Exit Admin</button>
       </div>
     </div>
 
-    <!-- Anonymous Feedback Panel -->
+    <!-- Feedback Panel -->
     <div class="panel">
       <h3>💬 Anonymous Staff Feedback (${A.fb.length} submitted)</h3>
       ${fbHtml()}
@@ -1461,7 +1697,7 @@ function renderAdminPanel(adminOn) {
   $('rv').onclick = async () => {
     try {
       await run('setRev', pin, !D.rev);
-      toast(D.rev ? 'Results hidden' : 'Winner revealed to everyone!');
+      toast(D.rev ? 'Winner and results published to everyone!' : 'Results hidden');
       await load();
     } catch(e) { err(e); }
   };
@@ -1488,9 +1724,9 @@ function renderAdminPanel(adminOn) {
   if (reminderBtn) {
     reminderBtn.onclick = () => {
       const pendingNames = A.pendingList.map(p => p.name).join(', ');
-      const msg = `📢 Employee of the Month Voting Reminder!\nPending voters: ${pendingNames}\nPlease cast your vote here: ${window.location.href.split('#')[0]}`;
+      const msg = `📢 Employee of the Month Reminder!\nPending voters: ${pendingNames}\nPlease cast your vote here: ${window.location.href.split('#')[0]}`;
       navigator.clipboard.writeText(msg).then(() => {
-        toast('Copied WhatsApp reminder message to clipboard!');
+        toast('Copied WhatsApp reminder to clipboard!');
       }).catch(() => {
         prompt('Copy reminder message:', msg);
       });
@@ -1527,13 +1763,16 @@ function arm(k) {
       armed = null;
       render();
     }
-  }, 3000);
+  }, 3500);
 }
 
 // Voting execution
 async function doVote(candidateId) {
   if (!curVoter) {
-    return toast('Please register or log in above to vote');
+    toast('Please sign in or register above to cast your vote!');
+    const ac = $('auth-container');
+    if (ac) ac.scrollIntoView({ behavior: 'smooth' });
+    return;
   }
   if (armed !== candidateId) return arm(candidateId);
   armed = null;
@@ -1541,9 +1780,10 @@ async function doVote(candidateId) {
   try {
     const res = await run('empVote', curVoter.id, candidateId);
     voterState.hasVoted = true;
-    voterState.votedFor = res.candidateName;
+    voterState.votedForId = res.candidateId;
+    voterState.votedForName = res.candidateName;
     voterState.votedTime = res.timeStr;
-    toast(`🎉 Vote recorded for ${res.candidateName}! Thank you!`);
+    toast(`🎉 Congratulations! Your vote for ${res.candidateName} is recorded!`);
     await load();
   } catch(e) {
     err(e);
@@ -1557,7 +1797,7 @@ async function doDel(id) {
   armed = null;
   try {
     await run('delEmp', pin, id);
-    toast('Employee removed permanently');
+    toast('Employee removed');
     await load();
   } catch(e) { err(e); }
 }
@@ -1578,12 +1818,12 @@ async function addEmp() {
     $('en').value = '';
     $('er').value = '';
     $('ep').value = '';
-    toast('✓ Employee added and permanently saved!');
+    toast('✓ Employee added and saved permanently!');
     await load();
   } catch(e) { err(e); }
 }
 
-// Edit Existing Employee Modal (Change Name, Role, Upload / Replace Photo, Reset PIN)
+// Edit Existing Employee Modal
 function openEditEmp(empId) {
   const emp = D.emps.find(e => e.id === empId);
   if (!emp) return;
@@ -1666,7 +1906,7 @@ function openEditEmp(empId) {
       m.querySelector('#edit-url').value = '';
       const prev = m.querySelector('#edit-preview');
       prev.outerHTML = `<div id="edit-preview" class="av">${esc(ini(m.querySelector('#edit-name').value || 'EM'))}</div>`;
-      toast('Photo removed. Initials will be used.');
+      toast('Photo removed');
     };
   }
 
@@ -1680,14 +1920,12 @@ function openEditEmp(empId) {
     if (!newName) return toast('Employee name is required');
 
     let finalPhoto = newPhotoBase64;
-    if (urlInput) {
-      finalPhoto = urlInput;
-    }
+    if (urlInput) finalPhoto = urlInput;
 
     try {
       await run('editEmp', pin, emp.id, newName, newRole, finalPhoto, newPin);
       m.remove();
-      toast('✓ Employee updated and saved permanently!');
+      toast('✓ Changes saved permanently!');
       await load();
     } catch(e) { err(e); }
   };
@@ -1703,7 +1941,7 @@ function openFb(eid) {
   m.innerHTML = `
     <div class="box">
       <h3 style="margin:0 0 4px">Feedback for ${esc(e.name)}</h3>
-      <div class="note">🔒 Anonymous: Admin sees feedback to foster team recognition.</div>
+      <div class="note">🔒 Anonymous: Admin sees feedback to recognize achievements.</div>
       <div class="seg">
         <button data-k="compliment" class="on">👏 Compliment</button>
         <button data-k="suggestion">💡 Suggestion</button>
@@ -1731,6 +1969,95 @@ function openFb(eid) {
     } catch(x) { err(x); }
   };
 }
+
+// Winner & Results Modal (Accessible to Everyone)
+$('view-winner-btn').onclick = () => {
+  const db = DB.get();
+  const curMonth = getMonthStr();
+  const monthBallots = db.ballots.filter(b => b.month === curMonth);
+  const counts = {};
+  monthBallots.forEach(b => { counts[b.cid] = (counts[b.cid] || 0) + 1; });
+  const isRev = !!db.rev;
+
+  const m = document.createElement('div');
+  m.className = 'modal';
+
+  if (!isRev) {
+    // Voting in progress
+    m.innerHTML = `
+      <div class="box" style="text-align:center">
+        <div style="font-size:2.4rem;margin-bottom:8px">⏳</div>
+        <h3 style="margin:0 0 8px;font-size:1.3rem">Voting Is Still In Progress</h3>
+        <p class="note" style="font-size:0.95rem;line-height:1.5;margin-bottom:14px">
+          The winner has not been revealed yet! The administrator will announce the winner once voting closes.
+        </p>
+        <div style="background:var(--bg);padding:12px;border-radius:12px;margin-bottom:16px;border:1px solid var(--line)">
+          <div style="font-size:1.3rem;font-weight:900;color:var(--acc)">
+            ${monthBallots.length} of ${db.employees.length} Staff
+          </div>
+          <div class="note" style="margin:2px 0 0">have voted so far this month</div>
+        </div>
+        <button data-c style="width:100%">Got It</button>
+      </div>
+    `;
+  } else {
+    // Winner announced with leaderboard
+    const mx = Math.max(0, ...db.employees.map(e => counts[e.id] || 0));
+    const winners = mx > 0 ? db.employees.filter(e => (counts[e.id] || 0) === mx) : [];
+    const sorted = [...db.employees].sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0));
+
+    m.innerHTML = `
+      <div class="box">
+        <div style="text-align:center;margin-bottom:14px">
+          <div style="font-size:2.2rem">👑</div>
+          <h2 style="margin:4px 0 2px;font-size:1.4rem">Employee of the Month</h2>
+          <div class="note">${new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })} Results</div>
+        </div>
+
+        ${winners.length ? `
+          <div style="background:linear-gradient(135deg,var(--gold-bg),var(--acc2));border:2px solid var(--gold);border-radius:16px;padding:14px;text-align:center;margin-bottom:16px">
+            <div style="font-weight:900;font-size:1.25rem;color:var(--acc)">
+              🏆 ${winners.map(w => esc(w.name)).join(' & ')}
+            </div>
+            <div class="note" style="font-weight:700;color:var(--ink);margin-top:2px">
+              ${mx} Vote${mx > 1 ? 's' : ''}${winners.length > 1 ? ' each (Tie)' : ''}
+            </div>
+          </div>
+        ` : ''}
+
+        <h4 style="margin:0 0 8px;font-size:0.95rem">📊 Leaderboard & Vote Counts:</h4>
+        <div style="max-height:240px;overflow-y:auto;border:1px solid var(--line);border-radius:12px">
+          <table class="leaderboard-table">
+            <thead>
+              <tr style="background:var(--bg)">
+                <th>Rank</th>
+                <th>Candidate</th>
+                <th style="text-align:right">Votes</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sorted.map((e, idx) => `
+                <tr>
+                  <td><span class="rank-badge rank-${idx + 1}">${idx + 1}</span></td>
+                  <td><b>${esc(e.name)}</b> <span class="note">(${esc(e.role || 'Staff')})</span></td>
+                  <td style="text-align:right;font-weight:900;color:var(--acc)">${counts[e.id] || 0}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:16px">
+          <button data-c style="width:100%">Close</button>
+        </div>
+      </div>
+    `;
+  }
+
+  document.body.appendChild(m);
+  m.querySelectorAll('[data-c]').forEach(b => b.onclick = () => m.remove());
+  m.onclick = ev => { if (ev.target === m) m.remove(); };
+};
 
 // Touch & Pinch Photo Zoom
 function openZoom(src, name) {
@@ -1827,7 +2154,7 @@ $('alink').onclick = e => {
   };
 };
 
-// Initial load
+// Initial run
 load();
 </script>
 </body>

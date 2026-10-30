@@ -1,45 +1,40 @@
-# 🏆 Employee of the Month — Voting & Verification Dashboard
+# 🏆 Employee of the Month — Voting, Recognition & Winner Showcase
 
-A mobile-first, interactive, and verified employee voting system where staff can self-register, log in, cast their vote for colleagues, and administrators can securely audit participation and view who voted for whom.
+A mobile-first, interactive, and verified employee voting system where staff can self-register or sign in, view colleague cards with their photos, cast their vote using a clear **Vote** button, submit compliments/suggestions via the **Feedback** button, and view the winner and results leaderboard!
 
 🔗 **Live URL:** [https://employee-of-the-month-pink.vercel.app](https://employee-of-the-month-pink.vercel.app)
 
 ---
 
-## ✨ Key Features
+## 🎯 The Complete User Flow
 
-### 👤 1. Self-Registration & Employee Login
-- **Self-Registration on Shared Link:** When employees open the link (e.g. from WhatsApp), they can register themselves directly with their full name, role/department, photo (camera/upload or URL), and create their own secret PIN.
-- **Sign In for Returning Staff:** Select their registered name, enter their secret PIN, and sign in.
-- **Vote Once Per Month:** Tracks voting status. Once an employee votes, their ballot is locked for that month.
-- **Self-Vote Prevention:** Employees cannot vote for themselves.
-- **Two-Tap Confirmation:** Confirms vote intent with an animated 3-second confirmation step.
-- **Session Switcher:** One-tap "Log Out / Switch User" so multiple colleagues can vote from a shared phone or tablet.
+1. **Step 1: Open Link & Sign In / Register:**
+   - When an employee opens the link (shared on WhatsApp or web), they arrive at the **Employee Access** gateway:
+     - **🔑 Sign In (Existing Staff):** Select your name from the dropdown roster, enter your secret 4-digit PIN, and tap **"Sign In & Cast Vote"**.
+     - **✨ Register (New Employee):** Enter full name, role/department, photo (from camera/gallery or URL), choose a 4-digit PIN, and tap **"Register & Start Voting"**.
+   - If someone just wants to check the results or who won, they can tap **"🏆 Winner & Results"** right from the top navigation bar!
 
-### 🔒 2. Hidden & Secure Admin PIN
-- **Zero Public Exposure:** The admin PIN is completely hidden from the public UI. No hints, defaults, or badges are shown anywhere to employees or visitors.
-- **Admin PIN Management:** Inside the admin portal, the admin can change their PIN anytime (`Change Admin PIN`).
-- **Reset Employee PIN:** Admin can inspect or reset any employee's PIN if an employee forgets it.
+2. **Step 2: Employee List & Two Clear Action Buttons:**
+   - Once logged in, the user sees their active profile badge (`Logged in as: [Name]`) and the list of nominated candidates with their photos and roles.
+   - Each employee card has **two distinct buttons**:
+     1. **`🗳️ Vote for [Name]`**:
+        - Bright orange, prominent button.
+        - Has a two-tap confirmation (`⚠️ Tap again to confirm!`) with an animated 3.5s safety timer to prevent misclicks.
+        - Employees cannot vote for themselves (`✕ Cannot vote for yourself`).
+        - Once a vote is cast, their choice is marked with `✓ Your Vote`, and voting locks for the current month.
+     2. **`💬 Feedback`**:
+        - Allows any staff member to submit an anonymous **👏 Compliment** or **💡 Suggestion** for that colleague.
 
-### 📊 3. Admin Audit: Who Voted For Whom
-- **Live Participation Stats:** Real-time summary of Total Employees, Votes Cast, Pending Voters, and Turnout percentage.
-- **Who Voted For Whom Table:** Admin can inspect the full voting audit showing exactly which employee voted for which candidate, complete with date and time.
-- **Pending Voters List:** Displays names of all employees who haven't voted yet, with a **"Copy WhatsApp Reminder"** button to nudge pending staff with one tap.
+3. **Step 3: Winner & Results Showcase:**
+   - Tap **"🏆 Winner & Results"** in the top navigation bar at any time:
+     - **While voting is active:** Shows participation turnout (*"X of Y staff have voted so far"*) and lets users know the winner will be declared soon.
+     - **Once voting concludes / Admin reveals results:** Displays a festive winner podium with crown, winner's photo, name, role, vote count, and a full ranked leaderboard of all candidates!
 
-### 🖼️ 4. Employee Management & Photo Upload/Editing
-- **Upload / Replace Photos Anytime:** In the Admin panel, tap **"📷 Edit / Photo"** next to any employee to upload/replace photos or edit their name and role.
-- **Automatic Storage Optimization:** Photos are compressed to 150x150 Retina thumbnails (~6KB), ensuring permanent saving without browser storage quota issues.
-
----
-
-## 🚀 Quick Start Guide
-
-1. Open [https://employee-of-the-month-pink.vercel.app](https://employee-of-the-month-pink.vercel.app).
-2. **Employee Registration & Login:**
-   - Tap **"✨ New Employee? Register Here"**, enter your name, role, optional photo, and create a PIN.
-   - Or tap **"🔑 Existing Employee Sign In"** to log into an existing profile.
-   - Vote for a colleague by tapping **Vote for [Name]** → confirm within 3 seconds.
-3. **Admin Portal:**
-   - Tap **⚙️ Admin Portal** at the very bottom.
-   - Enter your secret Admin PIN (default: `1234`).
-   - View the live audit of who voted for whom, pending voters, manage staff profiles, or reveal the winner!
+4. **Step 4: Admin Portal (`⚙️ Admin Portal` at footer):**
+   - Secured with a secret Admin PIN (completely hidden from public UI).
+   - Admin features:
+     - **"🎉 Reveal Winner to Everyone" / "🔒 Hide Winner & Results"** toggle button.
+     - Live audit table: Voter Name → Candidate Voted For → Date & Time.
+     - List of pending voters with a 1-tap **"Copy WhatsApp Reminder"** button.
+     - Add employees, edit employee names/roles, upload/replace photos, or reset employee PINs.
+     - Change the secret Admin PIN anytime.
