@@ -6,50 +6,15 @@ const BLOB_URL = 'https://goqu5eu4jodzu0ws.public.blob.vercel-storage.com/eom-li
 const DEFAULT_DATA = {
   admin_pin: '1234',
   rev: false,
-  employees: [
-    {
-      id: 'e1',
-      name: 'Sarah Chen',
-      role: 'Lead UI/UX Designer',
-      photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&auto=format&fit=crop&q=80',
-      pin: '1111',
-      created_at: 1000
-    },
-    {
-      id: 'e2',
-      name: 'Marcus Johnson',
-      role: 'Senior Backend Engineer',
-      photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
-      pin: '1111',
-      created_at: 2000
-    },
-    {
-      id: 'e3',
-      name: 'Priya Sharma',
-      role: 'Customer Success Lead',
-      photo: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&auto=format&fit=crop&q=80',
-      pin: '1111',
-      created_at: 3000
-    },
-    {
-      id: 'e4',
-      name: 'Alex Rivera',
-      role: 'DevOps & Cloud Architect',
-      photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
-      pin: '1111',
-      created_at: 4000
-    }
-  ],
+  employees: [],
   ballots: [],
   feedback: []
 };
 
-let memoryDb = null;
-
-// Helper: fetch latest cloud database directly from origin
+// Helper: fetch latest cloud database
 async function getDb() {
   try {
-    const url = `${BLOB_URL}?download=1&_t=${Date.now()}&_r=${Math.random()}`;
+    const url = `${BLOB_URL}?t=${Date.now()}&_r=${Math.random()}`;
     const res = await fetch(url, {
       cache: 'no-store',
       headers: {
@@ -59,21 +24,16 @@ async function getDb() {
     });
     if (res.ok) {
       const data = await res.json();
-      if (data && Array.isArray(data.employees)) {
-        memoryDb = data;
-        return data;
-      }
+      if (data && Array.isArray(data.employees)) return data;
     }
   } catch(e) {
     console.error('Error fetching blob db:', e);
   }
-  if (memoryDb && Array.isArray(memoryDb.employees)) return memoryDb;
   return JSON.parse(JSON.stringify(DEFAULT_DATA));
 }
 
 // Helper: persist updated database to Vercel Blob
 async function saveDb(data) {
-  memoryDb = data;
   const blob = await put(BLOB_NAME, JSON.stringify(data, null, 2), {
     access: 'public',
     addRandomSuffix: false,
@@ -184,9 +144,6 @@ export default async function handler(req, res) {
         const cleanText = String(text || '').trim();
         if (!cleanText) return res.status(400).json({ error: 'Please write something first' });
 
-        const candidate = db.employees.find(e => e.id === eid);
-        if (!candidate) return res.status(404).json({ error: 'Employee not found' });
-
         const voter = db.employees.find(e => e.id === voter_id);
         db.feedback.push({
           month: curMonth,
@@ -210,15 +167,10 @@ export default async function handler(req, res) {
         const cleanName = String(name || '').trim();
         if (!cleanName) return res.status(400).json({ error: 'Name is required' });
 
-        const existing = db.employees.find(e => e.name.toLowerCase() === cleanName.toLowerCase());
-        if (existing) {
-          return res.status(400).json({ error: `An employee named "${cleanName}" already exists.` });
-        }
-
         const newEmp = {
           id: 'e' + Date.now(),
           name: cleanName,
-          role: String(role || '').trim() || 'Team Member',
+          role: String(role || '').trim(),
           photo: String(photo || '').trim(),
           pin: '1111',
           created_at: Date.now()
