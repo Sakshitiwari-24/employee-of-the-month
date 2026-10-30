@@ -46,16 +46,19 @@ const DEFAULT_DATA = {
 
 // Helper: fetch latest cloud database
 async function getDb() {
+  let fetchStatus = 0;
+  let fetchError = null;
   try {
     const res = await fetch(BLOB_URL + '?t=' + Date.now(), { cache: 'no-store' });
+    fetchStatus = res.status;
     if (res.ok) {
       const data = await res.json();
-      if (data && Array.isArray(data.employees)) return data;
+      if (data && Array.isArray(data.employees)) return { db: data, fetchStatus, fetchError };
     }
   } catch(e) {
-    console.error('Error fetching blob db:', e);
+    fetchError = e.message;
   }
-  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+  return { db: JSON.parse(JSON.stringify(DEFAULT_DATA)), fetchStatus, fetchError };
 }
 
 // Helper: persist updated database to Vercel Blob
@@ -85,9 +88,9 @@ export default async function handler(req, res) {
 
   // GET: Return entire cloud database
   if (req.method === 'GET') {
-    const db = await getDb();
+    const { db, fetchStatus, fetchError } = await getDb();
     if (req.url && req.url.includes('debug=1')) {
-      return res.status(200).json({ db, blobUrl: BLOB_URL });
+      return res.status(200).json({ db, blobUrl: BLOB_URL, fetchStatus, fetchError });
     }
     return res.status(200).json(db);
   }
@@ -97,7 +100,7 @@ export default async function handler(req, res) {
     try {
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
       const { action } = body || {};
-      const db = await getDb();
+      const { db } = await getDb();
       const curMonth = getMonthStr();
 
       // 1. Employee Self-Registration
