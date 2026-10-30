@@ -875,10 +875,27 @@ async function apiCall(action, payload = {}) {
   }
 }
 
-// Fetch latest shared cloud database
+// Fetch latest shared cloud database with instant sub-second edge sync
 async function fetchCloudDb() {
   try {
-    const res = await fetch('/api/data?t=' + Date.now(), { cache: 'no-store' });
+    const resBlob = await fetch(BLOB_URL + '?t=' + Date.now() + '&_r=' + Math.random(), {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+    });
+    if (resBlob.ok) {
+      const data = await resBlob.json();
+      if (data && Array.isArray(data.employees)) {
+        DB.saveLocal(data);
+        return data;
+      }
+    }
+  } catch(e) {}
+
+  try {
+    const res = await fetch('/api/data?t=' + Date.now() + '&_r=' + Math.random(), {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+    });
     if (res.ok) {
       const data = await res.json();
       if (data && Array.isArray(data.employees)) {
@@ -886,18 +903,8 @@ async function fetchCloudDb() {
         return data;
       }
     }
-  } catch(e) {
-    try {
-      const resBlob = await fetch(BLOB_URL + '?t=' + Date.now(), { cache: 'no-store' });
-      if (resBlob.ok) {
-        const data = await resBlob.json();
-        if (data && Array.isArray(data.employees)) {
-          DB.saveLocal(data);
-          return data;
-        }
-      }
-    } catch(e2) {}
-  }
+  } catch(e2) {}
+
   return DB.get();
 }
 
