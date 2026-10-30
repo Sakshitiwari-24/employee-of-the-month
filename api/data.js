@@ -44,10 +44,12 @@ const DEFAULT_DATA = {
   feedback: []
 };
 
-// Helper: fetch latest cloud database
+let memoryDb = null;
+
+// Helper: fetch latest cloud database directly from origin
 async function getDb() {
   try {
-    const url = `${BLOB_URL}?t=${Date.now()}&_r=${Math.random()}`;
+    const url = `${BLOB_URL}?download=1&_t=${Date.now()}&_r=${Math.random()}`;
     const res = await fetch(url, {
       cache: 'no-store',
       headers: {
@@ -57,16 +59,21 @@ async function getDb() {
     });
     if (res.ok) {
       const data = await res.json();
-      if (data && Array.isArray(data.employees)) return data;
+      if (data && Array.isArray(data.employees)) {
+        memoryDb = data;
+        return data;
+      }
     }
   } catch(e) {
     console.error('Error fetching blob db:', e);
   }
+  if (memoryDb && Array.isArray(memoryDb.employees)) return memoryDb;
   return JSON.parse(JSON.stringify(DEFAULT_DATA));
 }
 
 // Helper: persist updated database to Vercel Blob
 async function saveDb(data) {
+  memoryDb = data;
   const blob = await put(BLOB_NAME, JSON.stringify(data, null, 2), {
     access: 'public',
     addRandomSuffix: false,

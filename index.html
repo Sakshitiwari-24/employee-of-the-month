@@ -878,7 +878,7 @@ async function apiCall(action, payload = {}) {
 // Fetch latest shared cloud database with instant sub-second edge sync
 async function fetchCloudDb() {
   try {
-    const resBlob = await fetch(BLOB_URL + '?t=' + Date.now() + '&_r=' + Math.random(), {
+    const resBlob = await fetch(BLOB_URL + '?download=1&_t=' + Date.now() + '&_r=' + Math.random(), {
       cache: 'no-store',
       headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
     });
@@ -892,7 +892,7 @@ async function fetchCloudDb() {
   } catch(e) {}
 
   try {
-    const res = await fetch('/api/data?t=' + Date.now() + '&_r=' + Math.random(), {
+    const res = await fetch('/api/data?_t=' + Date.now() + '&_r=' + Math.random(), {
       cache: 'no-store',
       headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
     });
