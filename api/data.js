@@ -6,7 +6,160 @@ const BLOB_URL = 'https://goqu5eu4jodzu0ws.public.blob.vercel-storage.com/eom-li
 const DEFAULT_DATA = {
   admin_pin: '1234',
   rev: false,
-  employees: [],
+  employees: [
+  {
+    "id": "e1",
+    "name": "Anil Mishra",
+    "role": "Field Technician",
+    "photo": "",
+    "pin": "5447",
+    "created_at": 1793366408893
+  },
+  {
+    "id": "e2",
+    "name": "Dharmendra Patel",
+    "role": "Field Technician",
+    "photo": "",
+    "pin": "2797",
+    "created_at": 1793366408894
+  },
+  {
+    "id": "e3",
+    "name": "Harikesh Nai",
+    "role": "Field Technician",
+    "photo": "",
+    "pin": "7781",
+    "created_at": 1793366408895
+  },
+  {
+    "id": "e4",
+    "name": "Hussain Khan",
+    "role": "Field Technician",
+    "photo": "",
+    "pin": "3865",
+    "created_at": 1793366408896
+  },
+  {
+    "id": "e5",
+    "name": "Javed Khan",
+    "role": "Field Technician",
+    "photo": "",
+    "pin": "6378",
+    "created_at": 1793366408897
+  },
+  {
+    "id": "e6",
+    "name": "Neeraj Soni",
+    "role": "Field Technician",
+    "photo": "",
+    "pin": "1442",
+    "created_at": 1793366408898
+  },
+  {
+    "id": "e7",
+    "name": "Nikhlesh Saket",
+    "role": "Field Technician",
+    "photo": "",
+    "pin": "8117",
+    "created_at": 1793366408899
+  },
+  {
+    "id": "e8",
+    "name": "Pituchand Thakur",
+    "role": "Field Technician",
+    "photo": "",
+    "pin": "5528",
+    "created_at": 1793366408900
+  },
+  {
+    "id": "e9",
+    "name": "Shubham Soni",
+    "role": "Field Technician",
+    "photo": "",
+    "pin": "6610",
+    "created_at": 1793366408902
+  },
+  {
+    "id": "e10",
+    "name": "Subhash Patel",
+    "role": "Field Technician",
+    "photo": "",
+    "pin": "3145",
+    "created_at": 1793366408903
+  },
+  {
+    "id": "e11",
+    "name": "Subhash Shukla",
+    "role": "Field Technician",
+    "photo": "",
+    "pin": "9608",
+    "created_at": 1793366408904
+  },
+  {
+    "id": "e12",
+    "name": "Umesh Patel",
+    "role": "Operational Incharge",
+    "photo": "",
+    "pin": "7913",
+    "created_at": 1793366408905
+  },
+  {
+    "id": "e13",
+    "name": "Priya Sahu",
+    "role": "Customer Care Officer",
+    "photo": "",
+    "pin": "6161",
+    "created_at": 1793366408906
+  },
+  {
+    "id": "e14",
+    "name": "Ankit Verma",
+    "role": "Service Incharge",
+    "photo": "",
+    "pin": "9553",
+    "created_at": 1793366408907
+  },
+  {
+    "id": "e15",
+    "name": "Dhiraj Goswami",
+    "role": "Team Leader",
+    "photo": "",
+    "pin": "5028",
+    "created_at": 1793366408908
+  },
+  {
+    "id": "e16",
+    "name": "Rahul Shondhiya",
+    "role": "Office Boy",
+    "photo": "",
+    "pin": "3658",
+    "created_at": 1793366408909
+  },
+  {
+    "id": "e17",
+    "name": "Arpita Tripathi",
+    "role": "CCO",
+    "photo": "",
+    "pin": "9726",
+    "created_at": 1793366408910
+  },
+  {
+    "id": "e18",
+    "name": "Sakshi Tiwari",
+    "role": "IT Executive",
+    "photo": "",
+    "pin": "1022",
+    "created_at": 1793366408911
+  },
+  {
+    "id": "e19",
+    "name": "Atul Sen",
+    "role": "Computer Operator",
+    "photo": "",
+    "pin": "4011",
+    "created_at": 1793366408912
+  }
+],
   ballots: [],
   feedback: []
 };
