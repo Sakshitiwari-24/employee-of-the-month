@@ -256,6 +256,67 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true, db: resetData });
       }
 
+      // 10. Employee Reset / Change Their Own PIN for Privacy
+      if (action === 'change_emp_pin') {
+        const { id, old_pin, new_pin } = body.data || {};
+        const emp = db.employees.find(e => e.id === id);
+        if (!emp) return res.status(404).json({ error: 'Employee not found' });
+        const curPin = String(emp.pin || '1111').trim();
+        const enteredOld = String(old_pin || '').trim();
+        if (enteredOld !== curPin && enteredOld !== String(db.admin_pin)) {
+          return res.status(403).json({ error: 'Current PIN is incorrect' });
+        }
+        const cleanNewPin = String(new_pin || '').trim();
+        if (!cleanNewPin || cleanNewPin.length < 4) {
+          return res.status(400).json({ error: 'New PIN must be at least 4 digits' });
+        }
+        emp.pin = cleanNewPin;
+        await saveDb(db);
+        return res.status(200).json({ ok: true, emp, db });
+      }
+
+      // 11. Admin Bulk Register Employees from Excel
+      if (action === 'bulk_register') {
+        const { pin: adminPin, employees: bulkList } = body;
+        if (String(adminPin || '').trim() !== String(db.admin_pin)) {
+          return res.status(403).json({ error: 'Wrong admin PIN' });
+        }
+        if (!Array.isArray(bulkList) || !bulkList.length) {
+          return res.status(400).json({ error: 'No employee list provided' });
+        }
+
+        const added = [];
+        for (let idx = 0; idx < bulkList.length; idx++) {
+          const item = bulkList[idx];
+          const cleanName = String(item.name || '').trim();
+          if (!cleanName) continue;
+          const cleanRole = String(item.role || '').trim();
+          // Generate 4-digit random pin if not given
+          const assignedPin = item.pin ? String(item.pin).trim() : String(Math.floor(1000 + Math.random() * 9000));
+          
+          let emp = db.employees.find(e => e.name.toLowerCase() === cleanName.toLowerCase());
+          if (emp) {
+            emp.role = cleanRole || emp.role;
+            if (item.photo) emp.photo = item.photo;
+            if (item.pin) emp.pin = assignedPin;
+          } else {
+            emp = {
+              id: 'e' + (Date.now() + idx),
+              name: cleanName,
+              role: cleanRole,
+              photo: item.photo || '',
+              pin: assignedPin,
+              created_at: Date.now() + idx
+            };
+            db.employees.push(emp);
+          }
+          added.push(emp);
+        }
+
+        await saveDb(db);
+        return res.status(200).json({ ok: true, added, db });
+      }
+
       return res.status(400).json({ error: 'Unknown action' });
     } catch(err) {
       console.error('API error:', err);

@@ -1024,6 +1024,16 @@ const RPC = {
   async resetDemo(p_pin) {
     const res = await apiCall('reset', { pin: p_pin });
     return res;
+  },
+
+  async changeEmpPin(p_id, p_old_pin, p_new_pin) {
+    const res = await apiCall('change_emp_pin', { data: { id: p_id, old_pin: p_old_pin, new_pin: p_new_pin } });
+    return res.emp;
+  },
+
+  async bulkRegister(p_pin, p_list) {
+    const res = await apiCall('bulk_register', { pin: p_pin, employees: p_list });
+    return res.added;
   }
 };
 
@@ -1194,7 +1204,8 @@ function renderAuthOrProfile() {
             `}
           </div>
         </div>
-        <div class="row">
+        <div class="row" style="gap:6px">
+          <button class="g sm" id="voter-change-pin">🔑 Reset PIN</button>
           <button class="g sm" id="voter-logout">Log Out / Switch User</button>
         </div>
       </div>
@@ -1209,6 +1220,7 @@ function renderAuthOrProfile() {
       ` : ''}
     `;
 
+    $('voter-change-pin').onclick = () => openChangePinModal(curVoter);
     $('voter-logout').onclick = () => {
       curVoter = null;
       voterState = { hasVoted: false, votedForId: null, votedForName: null, votedTime: null };
@@ -1479,9 +1491,15 @@ function renderAdminPanel(adminOn) {
 
       <!-- Roster Management -->
       <div style="margin-bottom:18px">
-        <h4 style="margin:0 0 8px;font-size:0.95rem">👥 Manage Employees (${A.employees.length})</h4>
+        <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
+          <h4 style="margin:0;font-size:0.95rem">👥 Staff Roster & PINs (${A.employees.length})</h4>
+          <div class="row" style="gap:6px">
+            <button class="g sm" id="bulk-import-btn">📥 Bulk Import from Excel</button>
+            <button class="g sm" id="copy-pins-btn">📋 Copy All PINs</button>
+          </div>
+        </div>
         <div style="max-height: 280px; overflow-y: auto; padding-right: 4px;">
-          ${A.employees.map(emp => `
+          ${A.employees.length ? A.employees.map(emp => `
             <div class="emp-manage-item">
               ${emp.photo ? `
                 <img class="emp-manage-av" src="${esc(emp.photo)}" alt="">
@@ -1490,12 +1508,14 @@ function renderAdminPanel(adminOn) {
               `}
               <div class="emp-manage-info">
                 <div class="emp-manage-name">${esc(emp.name)}</div>
-                <div class="emp-manage-role">${esc(emp.role || 'Staff')}</div>
+                <div class="emp-manage-role">
+                  ${esc(emp.role || 'Staff')} · <span style="background:var(--acc2);color:var(--acc);padding:2px 6px;border-radius:6px;font-weight:800;font-size:0.78rem">PIN: <b>${esc(emp.pin || '----')}</b></span>
+                </div>
               </div>
               <button class="g sm" data-edit="${emp.id}">📷 Edit / Photo</button>
               <button class="g danger sm" data-d="${emp.id}">${armed === 'd' + emp.id ? 'Sure?' : '✕'}</button>
             </div>
-          `).join('')}
+          `).join('') : '<div class="note">No employees registered yet. Use Bulk Import or the Add form above.</div>'}
         </div>
       </div>
 
@@ -1599,6 +1619,25 @@ function renderAdminPanel(adminOn) {
     };
   }
 
+  const copyPinsBtn = $('copy-pins-btn');
+  if (copyPinsBtn) {
+    copyPinsBtn.onclick = () => {
+      if (!A.employees.length) return toast('No employees registered yet');
+      const lines = A.employees.map((e, idx) => `${idx + 1}. ${e.name} (${e.role || 'Staff'}) — PIN: ${e.pin || '----'}`);
+      const text = `🏆 Employee of the Month — Staff Login Credentials:\n\n` + lines.join('\n') + `\n\nLogin & Vote here: ${window.location.origin + window.location.pathname}`;
+      navigator.clipboard.writeText(text).then(() => {
+        toast('Copied all staff names and PINs to clipboard!');
+      }).catch(() => {
+        prompt('Copy staff names and PINs:', text);
+      });
+    };
+  }
+
+  const bulkImportBtn = $('bulk-import-btn');
+  if (bulkImportBtn) {
+    bulkImportBtn.onclick = openBulkImportModal;
+  }
+
   admEl.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => openEditEmp(b.dataset.edit));
   admEl.querySelectorAll('[data-d]').forEach(b => b.onclick = () => doDel(b.dataset.d));
 }
@@ -1687,6 +1726,103 @@ async function addEmp() {
     toast('✓ Employee added and saved permanently!');
     await load();
   } catch(e) { err(e); }
+}
+
+// Employee Self-Service PIN Reset Modal (for privacy)
+function openChangePinModal(emp) {
+  if (!emp) return;
+  const m = document.createElement('div');
+  m.className = 'modal';
+  m.innerHTML = `
+    <div class="box">
+      <h3 style="margin:0 0 6px">🔒 Reset Your Secret PIN</h3>
+      <div class="note" style="margin-bottom:14px">Set a private 4-digit PIN for <b>${esc(emp.name)}</b>.</div>
+
+      <div style="margin-bottom:10px">
+        <label class="note" style="display:block;margin-bottom:4px;font-weight:700">Current PIN:</label>
+        <input id="ch-old-pin" type="password" placeholder="" style="width:100%;padding:10px">
+      </div>
+
+      <div style="margin-bottom:14px">
+        <label class="note" style="display:block;margin-bottom:4px;font-weight:700">New 4-Digit PIN:</label>
+        <input id="ch-new-pin" type="password" maxlength="12" placeholder="" style="width:100%;padding:10px;font-weight:700">
+      </div>
+
+      <div class="row" style="justify-content:flex-end">
+        <button class="g" id="ch-cancel">Cancel</button>
+        <button id="ch-submit">Save New PIN</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(m);
+  m.querySelector('#ch-cancel').onclick = () => m.remove();
+  m.querySelector('#ch-submit').onclick = async () => {
+    const oldP = m.querySelector('#ch-old-pin').value.trim();
+    const newP = m.querySelector('#ch-new-pin').value.trim();
+    if (!oldP) return toast('Please enter your current PIN');
+    if (!newP || newP.length < 4) return toast('New PIN must be at least 4 digits');
+    try {
+      const updated = await run('changeEmpPin', emp.id, oldP, newP);
+      curVoter = updated;
+      m.remove();
+      toast('✓ Your PIN has been updated successfully!');
+      await load();
+    } catch(e) { err(e); }
+  };
+}
+
+// Admin Bulk Import from Excel Modal
+function openBulkImportModal() {
+  const m = document.createElement('div');
+  m.className = 'modal';
+  m.innerHTML = `
+    <div class="box" style="max-width:540px">
+      <h3 style="margin:0 0 6px">📥 Bulk Import Staff from Excel</h3>
+      <div class="note" style="margin-bottom:12px">
+        Paste your column of employee names and column of roles from Excel serial-wise below:
+      </div>
+
+      <div class="row" style="margin-bottom:12px">
+        <div style="flex:1;min-width:140px">
+          <label class="note" style="display:block;margin-bottom:4px;font-weight:700">1. Names (one per line):</label>
+          <textarea id="bulk-names" rows="9" placeholder="" style="width:100%;font-size:13px;font-family:monospace;padding:8px"></textarea>
+        </div>
+        <div style="flex:1;min-width:140px">
+          <label class="note" style="display:block;margin-bottom:4px;font-weight:700">2. Job Roles (one per line):</label>
+          <textarea id="bulk-roles" rows="9" placeholder="" style="width:100%;font-size:13px;font-family:monospace;padding:8px"></textarea>
+        </div>
+      </div>
+
+      <div class="note" style="background:var(--bg);padding:10px;border-radius:10px;margin-bottom:14px">
+        💡 <b>Automatic PINs:</b> A unique 4-digit random PIN will automatically be created for each employee. You can copy the generated PINs and employees can reset them later.
+      </div>
+
+      <div class="row" style="justify-content:flex-end">
+        <button class="g" id="bulk-cancel">Cancel</button>
+        <button id="bulk-submit">✨ Import & Generate PINs</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(m);
+  m.querySelector('#bulk-cancel').onclick = () => m.remove();
+  m.querySelector('#bulk-submit').onclick = async () => {
+    const rawNames = m.querySelector('#bulk-names').value.split('\n').map(s => s.trim()).filter(Boolean);
+    const rawRoles = m.querySelector('#bulk-roles').value.split('\n').map(s => s.trim());
+    if (!rawNames.length) return toast('Please paste at least one employee name');
+
+    const list = rawNames.map((name, i) => ({
+      name,
+      role: rawRoles[i] || 'Staff',
+      pin: String(Math.floor(1000 + Math.random() * 9000))
+    }));
+
+    try {
+      await run('bulkRegister', pin, list);
+      m.remove();
+      toast(`✓ ${list.length} employees imported with 4-digit PINs!`);
+      await load();
+    } catch(e) { err(e); }
+  };
 }
 
 // Edit Existing Employee Modal
