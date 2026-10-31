@@ -1199,7 +1199,9 @@ let D = { emps: [], counts: {} },
     pin = null,
     A = null,
     armed = null,
-    activeAuthTab = 'login'; // 'login' or 'register'
+    activeAuthTab = 'login', // 'login' or 'register'
+    selectedLoginEmpId = '',
+    enteredLoginPin = '';
 
 $('mo').textContent = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }) + ' · Employee Voting & Awards';
 
@@ -1277,6 +1279,19 @@ function render() {
   const total = adminOn ? A.total : D.total;
 
   $('st').textContent = total + ' vote' + (total === 1 ? '' : 's') + ' cast' + (D.rev ? ' · Winner Announced 🎉' : ' · Voting Active');
+
+  const winnerBtn = $('view-winner-btn');
+  if (winnerBtn) {
+    if (D.rev) {
+      winnerBtn.innerHTML = '🎉 Winner Announced! View Results';
+      winnerBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+      winnerBtn.style.boxShadow = '0 2px 10px rgba(16, 185, 129, 0.4)';
+    } else {
+      winnerBtn.innerHTML = '🏆 Winner & Results';
+      winnerBtn.style.background = '';
+      winnerBtn.style.boxShadow = '';
+    }
+  }
 
   // 1. Render Winner Showcase if results are announced
   renderWinnerSection(showResults, c);
@@ -1377,12 +1392,44 @@ function renderAuthOrProfile() {
     $('voter-logout').onclick = () => {
       curVoter = null;
       voterState = { hasVoted: false, votedForId: null, votedForName: null, votedTime: null };
+      selectedLoginEmpId = '';
+      enteredLoginPin = '';
       localStorage.removeItem('eom_voter_id');
       toast('Logged out successfully');
       render();
     };
   } else {
     // User is NOT logged in: Show the clean Login / Register gateway
+    const existingSelect = $('voter-select');
+    const existingPin = $('voter-pin');
+    const existingBox = ac.querySelector('.auth-box');
+
+    // Preserve any selection or typing currently in DOM
+    if (existingSelect && existingSelect.value) {
+      selectedLoginEmpId = existingSelect.value;
+    }
+    if (existingPin && existingPin.value) {
+      enteredLoginPin = existingPin.value;
+    }
+
+    // If the auth box is ALREADY rendered on this tab, do NOT destroy the DOM
+    if (existingBox && ((activeAuthTab === 'login' && existingSelect) || (activeAuthTab === 'register' && $('reg-name')))) {
+      // Just keep dropdown options updated in case employees list changed
+      if (activeAuthTab === 'login' && existingSelect) {
+        if (existingSelect.options.length !== (D.emps.length + 1)) {
+          existingSelect.innerHTML = `<option value="">${D.emps.length ? '-- Choose Your Name from Roster --' : '-- No staff registered yet (Use Register tab) --'}</option>` +
+            D.emps.map(e => `<option value="${e.id}" ${e.id === selectedLoginEmpId ? 'selected' : ''}>${esc(e.name)} (${esc(e.role || 'Staff')})</option>`).join('');
+        }
+        if (selectedLoginEmpId && existingSelect.value !== selectedLoginEmpId) {
+          existingSelect.value = selectedLoginEmpId;
+        }
+        if (enteredLoginPin && existingPin && existingPin.value !== enteredLoginPin) {
+          existingPin.value = enteredLoginPin;
+        }
+      }
+      return;
+    }
+
     ac.innerHTML = `
       <div class="auth-box">
         <div style="text-align:center;margin-bottom:14px">
@@ -1406,12 +1453,12 @@ function renderAuthOrProfile() {
               <label class="note" style="display:block;margin-bottom:4px;font-weight:700">1. Select Your Name:</label>
               <select id="voter-select" style="width:100%;font-size:16px;padding:12px">
                 <option value="">${D.emps.length ? '-- Choose Your Name from Roster --' : '-- No staff registered yet (Use Register tab) --'}</option>
-                ${D.emps.map(e => `<option value="${e.id}">${esc(e.name)} (${esc(e.role || 'Staff')})</option>`).join('')}
+                ${D.emps.map(e => `<option value="${e.id}" ${e.id === selectedLoginEmpId ? 'selected' : ''}>${esc(e.name)} (${esc(e.role || 'Staff')})</option>`).join('')}
               </select>
             </div>
             <div style="margin-bottom:14px">
               <label class="note" style="display:block;margin-bottom:4px;font-weight:700">2. Enter Your 4-Digit PIN:</label>
-              <input id="voter-pin" type="password" placeholder="" style="width:100%;font-size:16px;padding:12px">
+              <input id="voter-pin" type="password" value="${esc(enteredLoginPin)}" placeholder="" style="width:100%;font-size:16px;padding:12px">
               <div class="note">Enter your 4-digit secret PIN.</div>
             </div>
             <button id="voter-login-btn" style="width:100%;font-size:1rem;min-height:46px">
@@ -1452,6 +1499,19 @@ function renderAuthOrProfile() {
     $('tab-login').onclick = () => { activeAuthTab = 'login'; render(); };
     $('tab-reg').onclick = () => { activeAuthTab = 'register'; render(); };
 
+    const vs = $('voter-select');
+    if (vs) {
+      vs.onchange = (e) => {
+        selectedLoginEmpId = e.target.value;
+      };
+    }
+    const vp = $('voter-pin');
+    if (vp) {
+      vp.oninput = (e) => {
+        enteredLoginPin = e.target.value;
+      };
+    }
+
     if ($('voter-login-btn')) {
       $('voter-login-btn').onclick = async () => {
         const eid = $('voter-select').value;
@@ -1462,6 +1522,8 @@ function renderAuthOrProfile() {
           const res = await run('empLogin', eid, p);
           curVoter = res.emp;
           voterState = res;
+          selectedLoginEmpId = '';
+          enteredLoginPin = '';
           localStorage.setItem('eom_voter_id', curVoter.id);
           toast(`✓ Welcome, ${curVoter.name}!`);
           render();
@@ -1489,6 +1551,8 @@ function renderAuthOrProfile() {
           const newEmp = await run('empRegister', name, role, photoBase64, pinVal);
           curVoter = newEmp;
           voterState = { hasVoted: false, votedForId: null, votedForName: null, votedTime: null };
+          selectedLoginEmpId = '';
+          enteredLoginPin = '';
           localStorage.setItem('eom_voter_id', newEmp.id);
           toast(`🎉 Welcome, ${newEmp.name}! You are registered. Please vote below!`);
           await load();
@@ -1581,9 +1645,14 @@ function renderEmployeeGrid(showResults, c) {
   // Listeners
   document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => doVote(b.dataset.v));
   document.querySelectorAll('[data-need-auth]').forEach(b => b.onclick = () => {
-    toast('Please sign in or register above to vote for this colleague!');
+    toast('Please sign in with your 4-digit PIN above to cast your vote!');
+    activeAuthTab = 'login';
+    render();
     const ac = $('auth-container');
     if (ac) ac.scrollIntoView({ behavior: 'smooth' });
+    const sel = $('voter-select');
+    if (sel && !sel.value) sel.focus();
+    else if ($('voter-pin')) $('voter-pin').focus();
   });
   document.querySelectorAll('[data-f]').forEach(b => b.onclick = () => openFb(b.dataset.f));
   document.querySelectorAll('[data-reset-pin]').forEach(b => {
@@ -1748,8 +1817,10 @@ function renderAdminPanel(adminOn) {
   $('ex').onclick = () => { pin = null; A = null; render(); };
   $('rv').onclick = async () => {
     try {
-      await run('setRev', pin, !D.rev);
-      toast(D.rev ? 'Winner and results published to everyone!' : 'Results hidden');
+      const newRev = !D.rev;
+      await run('setRev', pin, newRev);
+      D.rev = newRev;
+      toast(newRev ? '🎉 Winner and results published to everyone!' : '🔒 Results hidden from public');
       await load();
     } catch(e) { err(e); }
   };
@@ -1928,6 +1999,7 @@ function openChangePinModal(emp) {
   `;
   document.body.appendChild(m);
   m.querySelector('#ch-cancel').onclick = () => m.remove();
+  m.onclick = ev => { if (ev.target === m) m.remove(); };
   m.querySelector('#ch-submit').onclick = async () => {
     const oldP = m.querySelector('#ch-old-pin').value.trim();
     const newP = m.querySelector('#ch-new-pin').value.trim();
@@ -2148,26 +2220,27 @@ function openFb(eid) {
 $('view-winner-btn').onclick = async () => {
   const db = await fetchCloudDb();
   const curMonth = getMonthStr();
-  const monthBallots = db.ballots.filter(b => b.month === curMonth);
+  const monthBallots = (db.ballots || []).filter(b => b.month === curMonth);
   const counts = {};
   monthBallots.forEach(b => { counts[b.cid] = (counts[b.cid] || 0) + 1; });
   const isRev = !!db.rev;
+  const adminOn = !!(pin && A);
 
   const m = document.createElement('div');
   m.className = 'modal';
 
-  if (!isRev) {
-    // Voting in progress
+  if (!isRev && !adminOn) {
+    // Voting in progress for regular users
     m.innerHTML = `
       <div class="box" style="text-align:center">
-        <div style="font-size:2.4rem;margin-bottom:8px">⏳</div>
+        <div style="font-size:2.8rem;margin-bottom:8px">⏳</div>
         <h3 style="margin:0 0 8px;font-size:1.3rem">Voting Is Still In Progress</h3>
         <p class="note" style="font-size:0.95rem;line-height:1.5;margin-bottom:14px">
           The winner has not been revealed yet! The administrator will announce the winner once voting closes.
         </p>
-        <div style="background:var(--bg);padding:12px;border-radius:12px;margin-bottom:16px;border:1px solid var(--line)">
-          <div style="font-size:1.3rem;font-weight:900;color:var(--acc)">
-            ${monthBallots.length} of ${db.employees.length} Staff
+        <div style="background:var(--bg);padding:14px;border-radius:14px;margin-bottom:16px;border:1px solid var(--line)">
+          <div style="font-size:1.5rem;font-weight:900;color:var(--acc)">
+            ${monthBallots.length} of ${(db.employees || []).length} Staff
           </div>
           <div class="note" style="margin:2px 0 0">have voted so far this month</div>
         </div>
@@ -2175,36 +2248,55 @@ $('view-winner-btn').onclick = async () => {
       </div>
     `;
   } else {
-    // Winner announced with leaderboard
-    const mx = Math.max(0, ...db.employees.map(e => counts[e.id] || 0));
-    const winners = mx > 0 ? db.employees.filter(e => (counts[e.id] || 0) === mx) : [];
-    const sorted = [...db.employees].sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0));
+    // Winner announced OR Admin Live Preview
+    const mx = Math.max(0, ...(db.employees || []).map(e => counts[e.id] || 0));
+    const winners = mx > 0 ? (db.employees || []).filter(e => (counts[e.id] || 0) === mx) : [];
+    const sorted = [...(db.employees || [])].sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0));
 
     m.innerHTML = `
       <div class="box">
         <div style="text-align:center;margin-bottom:14px">
-          <div style="font-size:2.2rem">👑</div>
+          <div style="font-size:2.4rem">👑</div>
           <h2 style="margin:4px 0 2px;font-size:1.4rem">Employee of the Month</h2>
           <div class="note">${new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })} Results</div>
+          ${adminOn && !isRev ? `
+            <div style="margin-top:6px">
+              <span class="pill warn">⚙️ Admin Live Preview (Public Sees "Voting In Progress")</span>
+            </div>
+          ` : ''}
         </div>
 
         ${winners.length ? `
-          <div style="background:linear-gradient(135deg,var(--gold-bg),var(--acc2));border:2px solid var(--gold);border-radius:16px;padding:14px;text-align:center;margin-bottom:16px">
-            <div style="font-weight:900;font-size:1.25rem;color:var(--acc)">
-              🏆 ${winners.map(w => esc(w.name)).join(' & ')}
+          <div style="background:linear-gradient(135deg, #fff7ed, #ffedd5);border:2px solid var(--gold);border-radius:18px;padding:16px;text-align:center;margin-bottom:16px">
+            <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:8px">
+              ${winners.map(w => `
+                <div style="text-align:center">
+                  ${w.photo ? `
+                    <img src="${esc(w.photo)}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);box-shadow:var(--shadow);margin:0 auto 6px;display:block">
+                  ` : `
+                    <div class="av" style="width:72px;height:72px;font-size:1.4rem;border:3px solid var(--gold);margin:0 auto 6px">${esc(ini(w.name))}</div>
+                  `}
+                  <div style="font-weight:900;font-size:1.15rem;color:var(--ink)">${esc(w.name)}</div>
+                  <div class="note" style="margin-top:2px">${esc(w.role || 'Staff')}</div>
+                </div>
+              `).join('')}
             </div>
-            <div class="note" style="font-weight:700;color:var(--ink);margin-top:2px">
-              ${mx} Vote${mx > 1 ? 's' : ''}${winners.length > 1 ? ' each (Tie)' : ''}
+            <div style="font-size:1rem;font-weight:900;color:var(--acc);background:rgba(234,88,12,0.12);display:inline-block;padding:5px 16px;border-radius:9999px">
+              🏆 ${mx} Vote${mx > 1 ? 's' : ''}${winners.length > 1 ? ' each (Tie!)' : ''} Won!
             </div>
           </div>
-        ` : ''}
+        ` : `
+          <div class="panel" style="text-align:center;margin-bottom:14px">
+            <div class="note">No votes have been recorded yet for this month.</div>
+          </div>
+        `}
 
         <h4 style="margin:0 0 8px;font-size:0.95rem">📊 Leaderboard & Vote Counts:</h4>
-        <div style="max-height:240px;overflow-y:auto;border:1px solid var(--line);border-radius:12px">
+        <div style="max-height:240px;overflow-y:auto;border:1px solid var(--line);border-radius:12px;margin-bottom:16px">
           <table class="leaderboard-table">
             <thead>
               <tr style="background:var(--bg)">
-                <th>Rank</th>
+                <th style="width:50px">Rank</th>
                 <th>Candidate</th>
                 <th style="text-align:right">Votes</th>
               </tr>
@@ -2221,11 +2313,31 @@ $('view-winner-btn').onclick = async () => {
           </table>
         </div>
 
-        <div style="margin-top:16px">
+        ${adminOn ? `
+          <button id="modal-rev-toggle" style="width:100%;margin-bottom:8px;background:${isRev ? '#475569' : 'linear-gradient(135deg, #10b981, #059669)'}">
+            ${isRev ? '🔒 Hide Winner & Results from Public' : '🎉 Publish Winner & Results to Everyone Now'}
+          </button>
+        ` : ''}
+
+        <div>
           <button data-c style="width:100%">Close</button>
         </div>
       </div>
     `;
+
+    const revToggleBtn = m.querySelector('#modal-rev-toggle');
+    if (revToggleBtn) {
+      revToggleBtn.onclick = async () => {
+        try {
+          const newRev = !isRev;
+          await run('setRev', pin, newRev);
+          D.rev = newRev;
+          toast(newRev ? '🎉 Winner and results published to everyone!' : '🔒 Results hidden from public');
+          m.remove();
+          await load();
+        } catch(e) { err(e); }
+      };
+    }
   }
 
   document.body.appendChild(m);
@@ -2330,10 +2442,25 @@ $('alink').onclick = e => {
 
 // Real-time Cloud Sync: Polling every 4 seconds so all phones/laptops stay automatically in sync
 setInterval(() => {
-  const activeTag = document.activeElement ? document.activeElement.tagName : '';
-  if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
-    load(true);
-  }
+  // 1. Never interrupt if any modal dialog is currently open
+  if (document.querySelector('.modal')) return;
+
+  // 2. Never interrupt if active focus is on an input, select, or textarea
+  const active = document.activeElement;
+  const activeTag = active ? active.tagName : '';
+  if (['INPUT', 'SELECT', 'TEXTAREA'].includes(activeTag)) return;
+
+  // 3. Never interrupt if user has chosen an employee or typed a PIN in the login box
+  const sel = $('voter-select');
+  if (sel && sel.value) return;
+  const p = $('voter-pin');
+  if (p && p.value) return;
+
+  // 4. Never interrupt if user is typing in registration
+  const rn = $('reg-name');
+  if (rn && rn.value) return;
+
+  load(true);
 }, 4000);
 
 window.addEventListener('focus', () => {
