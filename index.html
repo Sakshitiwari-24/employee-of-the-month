@@ -1530,11 +1530,6 @@ function renderEmployeeGrid(showResults, c) {
           <div class="nm">${esc(e.name)}</div>
           <div class="rl">${esc(e.role || 'Team Member')}</div>
 
-          <!-- PIN Display on each card -->
-          <div class="card-pin-box" style="margin:6px 0 8px;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--acc2);color:var(--acc);padding:4px 12px;border-radius:10px;font-size:0.85rem;font-weight:800;border:1px solid rgba(225,29,72,0.15)">
-            <span>🔑 PIN: <b>${esc(e.pin || '----')}</b></span>
-          </div>
-
           ${showResults ? `
             <div class="cnt">${c[e.id] || 0} <span style="font-size:0.8rem;color:var(--mute);font-weight:600">votes</span></div>
           ` : ''}
